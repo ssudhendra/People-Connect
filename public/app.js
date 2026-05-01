@@ -1,5 +1,6 @@
 const profileBlock = document.querySelector("#profileBlock");
 const statusBadge = document.querySelector("#statusBadge");
+const opportunitiesView = document.querySelector("#opportunitiesView");
 const opportunityList = document.querySelector("#opportunityList");
 const connectionsList = document.querySelector("#connectionsList");
 const setupPanel = document.querySelector("#setupPanel");
@@ -30,12 +31,17 @@ const workplaceSelect = document.querySelector("#workplaceSelect");
 const jobTypeSelect = document.querySelector("#jobTypeSelect");
 const companyFilterInput = document.querySelector("#companyFilterInput");
 const sortSelect = document.querySelector("#sortSelect");
+const paginationInfo = document.querySelector("#paginationInfo");
+const pageSizeSelect = document.querySelector("#pageSizeSelect");
+const prevPageButton = document.querySelector("#prevPageButton");
+const nextPageButton = document.querySelector("#nextPageButton");
 
 let connectorHealth = null;
 let allOpportunities = [];
 let visibleOpportunities = [];
 let currentJobSourceStatus = null;
 let currentProfile = null;
+let currentPage = 1;
 
 const defaultSearchState = {
   title: "",
@@ -228,7 +234,36 @@ function postedDays(job) {
   return match ? Number(match[1]) : 999;
 }
 
-function applyFilters() {
+function pageSize() {
+  return Number(pageSizeSelect.value || 25);
+}
+
+function totalPages() {
+  return Math.max(1, Math.ceil(visibleOpportunities.length / pageSize()));
+}
+
+function renderPagination() {
+  const size = pageSize();
+  const pages = totalPages();
+  currentPage = Math.min(Math.max(currentPage, 1), pages);
+  const start = visibleOpportunities.length ? (currentPage - 1) * size + 1 : 0;
+  const end = Math.min(currentPage * size, visibleOpportunities.length);
+  paginationInfo.textContent = `${start}-${end} of ${visibleOpportunities.length} roles · page ${currentPage} of ${pages}`;
+  prevPageButton.disabled = currentPage <= 1;
+  nextPageButton.disabled = currentPage >= pages;
+}
+
+function renderOpportunityPage() {
+  renderMetrics(visibleOpportunities);
+  renderPagination();
+  const size = pageSize();
+  const startIndex = (currentPage - 1) * size;
+  renderOpportunityCards(visibleOpportunities.slice(startIndex, startIndex + size));
+  const source = currentJobSourceStatus?.mode === "live-provider" ? currentJobSourceStatus.providerName : "Demo data";
+  statusBadge.textContent = `${visibleOpportunities.length} shown · ${source}`;
+}
+
+function applyFilters(resetPage = true) {
   const keyword = keywordFilter.value.trim().toLowerCase();
   const minFit = Number(minFitFilter.value || 0);
   const degree = degreeFilter.value;
@@ -239,14 +274,12 @@ function applyFilters() {
       if (sortSelect.value === "network") return b.networkStrength - a.networkStrength;
       return b.fitScore - a.fitScore || b.networkStrength - a.networkStrength;
     });
-  renderOpportunities(visibleOpportunities);
+  if (resetPage) currentPage = 1;
+  renderOpportunityPage();
   renderConnections(visibleOpportunities);
-  const source = currentJobSourceStatus?.mode === "live-provider" ? currentJobSourceStatus.providerName : "Demo data";
-  statusBadge.textContent = `${visibleOpportunities.length} shown · ${source}`;
 }
 
-function renderOpportunities(opportunities) {
-  renderMetrics(opportunities);
+function renderOpportunityCards(opportunities) {
   if (!opportunities.length) {
     opportunityList.innerHTML = `<div class="empty-state">No opportunities match the current filters.</div>`;
     return;
@@ -440,6 +473,20 @@ async function resetSearch() {
 generateButton.addEventListener("click", generateOpportunities);
 resetSearchButton.addEventListener("click", resetSearch);
 applyFiltersButton.addEventListener("click", applyFilters);
+pageSizeSelect.addEventListener("change", () => {
+  currentPage = 1;
+  renderOpportunityPage();
+});
+prevPageButton.addEventListener("click", () => {
+  currentPage -= 1;
+  renderOpportunityPage();
+  opportunitiesView.scrollTo({ top: 0, behavior: "smooth" });
+});
+nextPageButton.addEventListener("click", () => {
+  currentPage += 1;
+  renderOpportunityPage();
+  opportunitiesView.scrollTo({ top: 0, behavior: "smooth" });
+});
 clearFiltersButton.addEventListener("click", () => {
   resetResultFilters();
   applyFilters();

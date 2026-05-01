@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>People Connections Connector</title>
-    <link rel="stylesheet" href="/styles.css?v=20260501-12">
+    <link rel="stylesheet" href="/styles.css?v=20260501-13">
   </head>
   <body>
     <main class="app-shell">
@@ -136,6 +136,23 @@
         </div>
 
         <section id="opportunitiesView" class="tab-view active">
+          <div class="results-toolbar">
+            <div class="results-summary">
+              <strong>Roles</strong>
+              <span id="paginationInfo">Loading</span>
+            </div>
+            <div class="pagination-controls">
+              <label class="page-size-label">Rows
+                <select id="pageSizeSelect">
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </label>
+              <button id="prevPageButton" class="small-button" type="button">Previous</button>
+              <button id="nextPageButton" class="small-button" type="button">Next</button>
+            </div>
+          </div>
           <div id="opportunityList" class="opportunity-list"></div>
         </section>
         <section id="connectionsView" class="tab-view">
@@ -146,6 +163,6 @@
         </section>
       </section>
     </main>
-    <script src="/app.js?v=20260501-12" type="module"></script>
+    <script src="/app.js?v=20260501-13" type="module"></script>
   </body>
 </html>

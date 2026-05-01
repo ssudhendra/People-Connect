@@ -292,7 +292,9 @@ select {
 }
 
 .tab-view.active {
-  display: block;
+  display: grid;
+  align-content: start;
+  gap: 12px;
   min-height: 0;
   overflow: auto;
   padding-right: 4px;
@@ -328,6 +330,45 @@ select {
   align-content: start;
   min-width: 0;
   padding-bottom: 24px;
+}
+
+.results-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.results-summary {
+  display: grid;
+  gap: 2px;
+}
+
+.results-summary span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.pagination-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.page-size-label {
+  width: 88px;
+  gap: 4px;
+  font-size: 11px;
 }
 
 .connection-list,
@@ -505,6 +546,20 @@ select {
   .tab-view.active {
     overflow: visible;
     padding-right: 0;
+  }
+
+  .results-toolbar {
+    position: static;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pagination-controls {
+    justify-content: stretch;
+  }
+
+  .page-size-label {
+    width: 100%;
   }
 
   .metrics,
