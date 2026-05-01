@@ -43,7 +43,7 @@ The app runs in `demo` mode by default. You can test the whole job and connectio
 3. Add this redirect URL:
 
 ```text
-http://localhost:8787/auth/linkedin/callback
+http://127.0.0.1:8787/auth/linkedin/callback
 ```
 
 4. Fill in `.env`:
@@ -51,6 +51,7 @@ http://localhost:8787/auth/linkedin/callback
 ```bash
 LINKEDIN_CLIENT_ID=your-client-id
 LINKEDIN_CLIENT_SECRET=your-client-secret
+LINKEDIN_OAUTH_FLOW=local-pkce
 CONNECTOR_MODE=live
 ```
 
@@ -60,7 +61,7 @@ CONNECTOR_MODE=live
 npm start
 ```
 
-For a normal local web app, leave `LINKEDIN_USE_PKCE=false`. LinkedIn's native PKCE flow uses a different authorization endpoint and should only be enabled for native-client apps.
+For direct local usage, keep `LINKEDIN_OAUTH_FLOW=local-pkce`. Use `LINKEDIN_OAUTH_FLOW=web` only after deploying behind HTTPS and registering that HTTPS callback URL in the LinkedIn Developer Portal.
 
 ## Connector endpoints
 

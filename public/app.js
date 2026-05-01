@@ -94,7 +94,7 @@ async function loadHealth() {
     connectLinkedInButton.classList.remove("disabled");
     connectLinkedInButton.setAttribute("href", "/auth/linkedin/start");
     connectLinkedInButton.setAttribute("aria-disabled", "false");
-    configMessage.textContent = "";
+    configMessage.textContent = `LinkedIn callback: ${connectorHealth.linkedInRedirectUri}`;
     return;
   }
 

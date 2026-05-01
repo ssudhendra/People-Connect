@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildAuthorizationUrl, exchangeCodeForToken, fetchLinkedInProfile } from "./services/linkedin.js";
+import { buildAuthorizationUrl, exchangeCodeForToken, fetchLinkedInProfile, getOAuthFlow, isPkceFlow } from "./services/linkedin.js";
 import { getProfileForSession, getSession } from "./services/session.js";
 import { createOpportunities } from "./services/opportunities.js";
 
@@ -37,12 +37,13 @@ loadEnvFile(path.join(rootDir, ".env"));
 
 const PORT = Number(process.env.PORT || 8787);
 const HOST = process.env.HOST || "127.0.0.1";
-const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || `http://localhost:${PORT}`;
+const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || `http://${HOST}:${PORT}`;
 const CONNECTOR_MODE = process.env.CONNECTOR_MODE || "demo";
+const LINKEDIN_REDIRECT_URI = `${PUBLIC_BASE_URL}/auth/linkedin/callback`;
 
 function isLinkedInConfigured() {
   if (!process.env.LINKEDIN_CLIENT_ID) return false;
-  if (process.env.LINKEDIN_USE_PKCE === "true") return true;
+  if (isPkceFlow()) return true;
   return Boolean(process.env.LINKEDIN_CLIENT_SECRET);
 }
 
@@ -114,6 +115,8 @@ async function handleApi(req, res) {
       ok: true,
       mode: CONNECTOR_MODE,
       linkedInConfigured: isLinkedInConfigured(),
+      linkedInOAuthFlow: getOAuthFlow(),
+      linkedInRedirectUri: LINKEDIN_REDIRECT_URI,
       jobSourceConfigured: Boolean(process.env.JOB_SOURCE_API_URL),
       baseUrl: PUBLIC_BASE_URL
     });
@@ -157,7 +160,7 @@ async function handleAuth(req, res) {
     }
 
     const state = crypto.randomBytes(24).toString("base64url");
-    const usePkce = process.env.LINKEDIN_USE_PKCE === "true";
+    const usePkce = isPkceFlow();
     const codeVerifier = usePkce ? crypto.randomBytes(48).toString("base64url") : null;
     session.oauth = {
       state,
@@ -169,7 +172,7 @@ async function handleAuth(req, res) {
     redirect(res, buildAuthorizationUrl({
       state,
       codeVerifier,
-      redirectUri: `${PUBLIC_BASE_URL}/auth/linkedin/callback`
+      redirectUri: LINKEDIN_REDIRECT_URI
     }));
     return;
   }
@@ -199,7 +202,7 @@ async function handleAuth(req, res) {
         code,
         codeVerifier: session.oauth.codeVerifier,
         usePkce: session.oauth.usePkce,
-        redirectUri: `${PUBLIC_BASE_URL}/auth/linkedin/callback`
+        redirectUri: LINKEDIN_REDIRECT_URI
       });
       const profile = await fetchLinkedInProfile(tokens);
       session.tokens = tokens;

@@ -26,6 +26,23 @@ function decodeJwtPayload(token) {
   }
 }
 
+export function getOAuthFlow() {
+  if (process.env.LINKEDIN_OAUTH_FLOW) {
+    return process.env.LINKEDIN_OAUTH_FLOW;
+  }
+  if (process.env.LINKEDIN_USE_PKCE === "true") {
+    return "local-pkce";
+  }
+  if (process.env.LINKEDIN_USE_PKCE === "false") {
+    return "web";
+  }
+  return "local-pkce";
+}
+
+export function isPkceFlow() {
+  return getOAuthFlow() === "local-pkce";
+}
+
 export function buildAuthorizationUrl({ state, codeVerifier, redirectUri }) {
   const params = new URLSearchParams({
     response_type: "code",
@@ -35,7 +52,7 @@ export function buildAuthorizationUrl({ state, codeVerifier, redirectUri }) {
     scope: process.env.LINKEDIN_SCOPES || "openid profile email"
   });
 
-  if (process.env.LINKEDIN_USE_PKCE === "true") {
+  if (isPkceFlow()) {
     params.set("code_challenge", base64UrlSha256(codeVerifier));
     params.set("code_challenge_method", "S256");
     return `${NATIVE_PKCE_AUTH_URL}?${params.toString()}`;
