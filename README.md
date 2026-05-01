@@ -43,7 +43,7 @@ The app runs in `demo` mode by default. You can test the whole job and connectio
 3. Add this redirect URL:
 
 ```text
-http://127.0.0.1:8787/auth/linkedin/callback
+http://localhost:8787/auth/linkedin/callback
 ```
 
 4. Fill in `.env`:
@@ -51,8 +51,8 @@ http://127.0.0.1:8787/auth/linkedin/callback
 ```bash
 LINKEDIN_CLIENT_ID=your-client-id
 LINKEDIN_CLIENT_SECRET=your-client-secret
-LINKEDIN_SCOPES=r_liteprofile r_emailaddress
-LINKEDIN_OAUTH_FLOW=local-pkce
+LINKEDIN_SCOPES=openid profile email
+LINKEDIN_OAUTH_FLOW=web
 CONNECTOR_MODE=live
 ```
 
@@ -62,7 +62,7 @@ CONNECTOR_MODE=live
 npm start
 ```
 
-For direct local usage, keep `LINKEDIN_OAUTH_FLOW=local-pkce` and use `r_liteprofile r_emailaddress`. OIDC scopes (`openid profile email`) are only valid for the web OIDC flow, not LinkedIn's native PKCE flow. Use `LINKEDIN_OAUTH_FLOW=web` only after deploying behind HTTPS and registering that HTTPS callback URL in the LinkedIn Developer Portal.
+Use `LINKEDIN_OAUTH_FLOW=web` for self-serve Sign In with LinkedIn using OpenID Connect. Do not use `local-pkce` unless LinkedIn has explicitly enabled Native PKCE protocol access for your app.
 
 ## Connector endpoints
 

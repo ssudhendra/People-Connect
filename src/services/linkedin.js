@@ -38,7 +38,7 @@ export function getOAuthFlow() {
   if (process.env.LINKEDIN_USE_PKCE === "false") {
     return "web";
   }
-  return "local-pkce";
+  return "web";
 }
 
 export function isPkceFlow() {
@@ -48,7 +48,12 @@ export function isPkceFlow() {
 export function getLinkedInScopes() {
   const configured = process.env.LINKEDIN_SCOPES;
   if (!isPkceFlow()) {
-    return configured || "openid profile email";
+    if (!configured) {
+      return "openid profile email";
+    }
+    const scopes = configured.split(/\s+/).filter(Boolean);
+    const hasLegacyScope = scopes.some((scope) => ["r_liteprofile", "r_emailaddress"].includes(scope));
+    return hasLegacyScope ? "openid profile email" : scopes.join(" ");
   }
 
   if (!configured) {
