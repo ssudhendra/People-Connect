@@ -40,6 +40,12 @@ const HOST = process.env.HOST || "127.0.0.1";
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || `http://localhost:${PORT}`;
 const CONNECTOR_MODE = process.env.CONNECTOR_MODE || "demo";
 
+function isLinkedInConfigured() {
+  if (!process.env.LINKEDIN_CLIENT_ID) return false;
+  if (process.env.LINKEDIN_USE_PKCE === "true") return true;
+  return Boolean(process.env.LINKEDIN_CLIENT_SECRET);
+}
+
 const mimeTypes = new Map([
   [".html", "text/html; charset=utf-8"],
   [".css", "text/css; charset=utf-8"],
@@ -107,7 +113,7 @@ async function handleApi(req, res) {
     sendJson(res, 200, {
       ok: true,
       mode: CONNECTOR_MODE,
-      linkedInConfigured: Boolean(process.env.LINKEDIN_CLIENT_ID),
+      linkedInConfigured: isLinkedInConfigured(),
       jobSourceConfigured: Boolean(process.env.JOB_SOURCE_API_URL),
       baseUrl: PUBLIC_BASE_URL
     });
@@ -145,16 +151,18 @@ async function handleAuth(req, res) {
   const session = getSession(req, res);
 
   if (req.method === "GET" && url.pathname === "/auth/linkedin/start") {
-    if (!process.env.LINKEDIN_CLIENT_ID) {
-      redirect(res, "/?authError=missing-linkedin-client-id");
+    if (!isLinkedInConfigured()) {
+      redirect(res, "/?authError=missing-linkedin-oauth-config");
       return;
     }
 
     const state = crypto.randomBytes(24).toString("base64url");
-    const codeVerifier = crypto.randomBytes(48).toString("base64url");
+    const usePkce = process.env.LINKEDIN_USE_PKCE === "true";
+    const codeVerifier = usePkce ? crypto.randomBytes(48).toString("base64url") : null;
     session.oauth = {
       state,
       codeVerifier,
+      usePkce,
       createdAt: Date.now()
     };
 
@@ -190,6 +198,7 @@ async function handleAuth(req, res) {
       const tokens = await exchangeCodeForToken({
         code,
         codeVerifier: session.oauth.codeVerifier,
+        usePkce: session.oauth.usePkce,
         redirectUri: `${PUBLIC_BASE_URL}/auth/linkedin/callback`
       });
       const profile = await fetchLinkedInProfile(tokens);

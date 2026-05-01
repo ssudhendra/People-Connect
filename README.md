@@ -60,6 +60,8 @@ CONNECTOR_MODE=live
 npm start
 ```
 
+For a normal local web app, leave `LINKEDIN_USE_PKCE=false`. LinkedIn's native PKCE flow uses a different authorization endpoint and should only be enabled for native-client apps.
+
 ## Connector endpoints
 
 - `GET /api/health`

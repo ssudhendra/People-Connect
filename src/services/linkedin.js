@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 
 const AUTH_URL = "https://www.linkedin.com/oauth/v2/authorization";
+const NATIVE_PKCE_AUTH_URL = "https://www.linkedin.com/oauth/native-pkce/authorization";
 const TOKEN_URL = "https://www.linkedin.com/oauth/v2/accessToken";
 const USERINFO_URL = "https://api.linkedin.com/v2/userinfo";
 
@@ -31,24 +32,32 @@ export function buildAuthorizationUrl({ state, codeVerifier, redirectUri }) {
     client_id: requiredEnv("LINKEDIN_CLIENT_ID"),
     redirect_uri: redirectUri,
     state,
-    scope: process.env.LINKEDIN_SCOPES || "openid profile email",
-    code_challenge: base64UrlSha256(codeVerifier),
-    code_challenge_method: "S256"
+    scope: process.env.LINKEDIN_SCOPES || "openid profile email"
   });
+
+  if (process.env.LINKEDIN_USE_PKCE === "true") {
+    params.set("code_challenge", base64UrlSha256(codeVerifier));
+    params.set("code_challenge_method", "S256");
+    return `${NATIVE_PKCE_AUTH_URL}?${params.toString()}`;
+  }
+
   return `${AUTH_URL}?${params.toString()}`;
 }
 
-export async function exchangeCodeForToken({ code, codeVerifier, redirectUri }) {
+export async function exchangeCodeForToken({ code, codeVerifier, usePkce, redirectUri }) {
   const body = new URLSearchParams({
     grant_type: "authorization_code",
     code,
     redirect_uri: redirectUri,
-    client_id: requiredEnv("LINKEDIN_CLIENT_ID"),
-    code_verifier: codeVerifier
+    client_id: requiredEnv("LINKEDIN_CLIENT_ID")
   });
 
-  if (process.env.LINKEDIN_CLIENT_SECRET) {
+  if (usePkce) {
+    body.set("code_verifier", codeVerifier);
+  } else if (process.env.LINKEDIN_CLIENT_SECRET) {
     body.set("client_secret", process.env.LINKEDIN_CLIENT_SECRET);
+  } else {
+    throw new Error("LINKEDIN_CLIENT_SECRET is required when LINKEDIN_USE_PKCE is false");
   }
 
   const response = await fetch(TOKEN_URL, {
