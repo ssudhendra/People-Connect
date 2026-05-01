@@ -39,7 +39,20 @@ const PORT = Number(process.env.PORT || 8787);
 const HOST = process.env.HOST || "127.0.0.1";
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || `http://${HOST}:${PORT}`;
 const CONNECTOR_MODE = process.env.CONNECTOR_MODE || "demo";
-const LINKEDIN_REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI || `${PUBLIC_BASE_URL}/auth/linkedin/callback`;
+const CONFIGURED_LINKEDIN_REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI || "auto";
+
+function requestBaseUrl(req) {
+  const host = req.headers.host || `${HOST}:${PORT}`;
+  const proto = req.headers["x-forwarded-proto"] || "http";
+  return `${proto}://${host}`;
+}
+
+function linkedInRedirectUriForRequest(req) {
+  if (CONFIGURED_LINKEDIN_REDIRECT_URI && CONFIGURED_LINKEDIN_REDIRECT_URI !== "auto") {
+    return CONFIGURED_LINKEDIN_REDIRECT_URI;
+  }
+  return `${requestBaseUrl(req)}/auth/linkedin/callback`;
+}
 
 function isLinkedInConfigured() {
   if (!process.env.LINKEDIN_CLIENT_ID) return false;
@@ -111,13 +124,19 @@ async function handleApi(req, res) {
   const session = getSession(req, res);
 
   if (req.method === "GET" && url.pathname === "/api/health") {
+    const linkedInRedirectUri = linkedInRedirectUriForRequest(req);
     sendJson(res, 200, {
       ok: true,
       mode: CONNECTOR_MODE,
       linkedInConfigured: isLinkedInConfigured(),
       linkedInOAuthFlow: getOAuthFlow(),
       linkedInScopes: getLinkedInScopes(),
-      linkedInRedirectUri: LINKEDIN_REDIRECT_URI,
+      linkedInRedirectUri,
+      linkedInRedirectMode: CONFIGURED_LINKEDIN_REDIRECT_URI,
+      linkedInLocalRedirectUris: [
+        `http://localhost:${PORT}/auth/linkedin/callback`,
+        `http://127.0.0.1:${PORT}/auth/linkedin/callback`
+      ],
       jobSourceConfigured: Boolean(process.env.JOB_SOURCE_API_URL),
       baseUrl: PUBLIC_BASE_URL
     });
@@ -163,17 +182,19 @@ async function handleAuth(req, res) {
     const state = crypto.randomBytes(24).toString("base64url");
     const usePkce = isPkceFlow();
     const codeVerifier = usePkce ? crypto.randomBytes(48).toString("base64url") : null;
+    const redirectUri = linkedInRedirectUriForRequest(req);
     session.oauth = {
       state,
       codeVerifier,
       usePkce,
+      redirectUri,
       createdAt: Date.now()
     };
 
     redirect(res, buildAuthorizationUrl({
       state,
       codeVerifier,
-      redirectUri: LINKEDIN_REDIRECT_URI
+      redirectUri
     }));
     return;
   }
@@ -203,7 +224,7 @@ async function handleAuth(req, res) {
         code,
         codeVerifier: session.oauth.codeVerifier,
         usePkce: session.oauth.usePkce,
-        redirectUri: LINKEDIN_REDIRECT_URI
+        redirectUri: session.oauth.redirectUri
       });
       const profile = await fetchLinkedInProfile(tokens);
       session.tokens = tokens;

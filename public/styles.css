@@ -86,7 +86,8 @@ label {
 }
 
 textarea,
-input {
+input,
+select {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -94,6 +95,16 @@ input {
   color: var(--ink);
   font: inherit;
   resize: vertical;
+}
+
+select {
+  background: white;
+}
+
+.range-value {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .button-row {
@@ -188,6 +199,38 @@ input {
   font-weight: 800;
 }
 
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tab {
+  min-height: 38px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  padding: 8px 12px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.tab.active {
+  border-color: var(--brand);
+  color: var(--brand-dark);
+}
+
+.tab-view {
+  display: none;
+}
+
+.tab-view.active {
+  display: block;
+}
+
 .metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(120px, 1fr));
@@ -217,6 +260,57 @@ input {
   gap: 12px;
   align-content: start;
   min-width: 0;
+}
+
+.connection-list,
+.setup-grid {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.setup-item,
+.connection-card {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.setup-item code {
+  overflow-wrap: anywhere;
+  color: var(--brand-dark);
+  font-size: 13px;
+}
+
+.setup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.small-button {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: white;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.empty-state {
+  padding: 18px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--muted);
+  font-weight: 700;
 }
 
 .job-card {

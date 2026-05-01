@@ -32,7 +32,7 @@ cp .env.example .env
 npm start
 ```
 
-Open `http://127.0.0.1:8787`.
+Open `http://localhost:8787`.
 
 The app runs in `demo` mode by default. You can test the whole job and connection-path flow without LinkedIn credentials.
 
@@ -40,9 +40,10 @@ The app runs in `demo` mode by default. You can test the whole job and connectio
 
 1. Create a LinkedIn Developer app.
 2. Enable **Sign In with LinkedIn using OpenID Connect**.
-3. Add this redirect URL:
+3. Add both redirect URLs:
 
 ```text
+http://localhost:8787/auth/linkedin/callback
 http://127.0.0.1:8787/auth/linkedin/callback
 ```
 
@@ -51,7 +52,7 @@ http://127.0.0.1:8787/auth/linkedin/callback
 ```bash
 LINKEDIN_CLIENT_ID=your-client-id
 LINKEDIN_CLIENT_SECRET=your-client-secret
-LINKEDIN_REDIRECT_URI=http://127.0.0.1:8787/auth/linkedin/callback
+LINKEDIN_REDIRECT_URI=auto
 LINKEDIN_SCOPES=openid profile email
 LINKEDIN_OAUTH_FLOW=web
 CONNECTOR_MODE=live
@@ -65,7 +66,7 @@ npm start
 
 Use `LINKEDIN_OAUTH_FLOW=web` for self-serve Sign In with LinkedIn using OpenID Connect. Do not use `local-pkce` unless LinkedIn has explicitly enabled Native PKCE protocol access for your app.
 
-LinkedIn requires an exact redirect URI match. The value in `LINKEDIN_REDIRECT_URI` must be copied exactly into the LinkedIn Developer Portal.
+LinkedIn requires an exact redirect URI match. `LINKEDIN_REDIRECT_URI=auto` sends a callback matching the host you opened, so registering both local URLs prevents localhost versus 127.0.0.1 mismatches.
 
 ## Connector endpoints
 

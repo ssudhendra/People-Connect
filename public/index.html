@@ -19,7 +19,7 @@
           <div id="profileBlock" class="profile-block"></div>
           <div id="configMessage" class="config-message"></div>
           <div class="button-row">
-            <a id="connectLinkedInButton" class="button primary" href="/auth/linkedin/start">Connect LinkedIn</a>
+            <button id="connectLinkedInButton" class="button primary" type="button">Connect LinkedIn</button>
             <button id="logoutButton" class="button secondary" type="button">Reset</button>
           </div>
         </section>
@@ -45,6 +45,28 @@ Developer Tools</textarea>
           </label>
           <button id="generateButton" class="button primary wide" type="button">Generate opportunities</button>
         </section>
+        <section class="panel">
+          <h2>Filters</h2>
+          <label>Keyword
+            <input id="keywordFilter" type="search" placeholder="Company, title, tag, contact">
+          </label>
+          <label>Minimum fit
+            <input id="minFitFilter" type="range" min="0" max="100" value="0">
+            <span id="minFitValue" class="range-value">0%</span>
+          </label>
+          <label>Connection degree
+            <select id="degreeFilter">
+              <option value="all">All degrees</option>
+              <option value="1st">1st degree</option>
+              <option value="2nd">2nd degree</option>
+              <option value="3rd">3rd degree</option>
+            </select>
+          </label>
+          <div class="button-row">
+            <button id="applyFiltersButton" class="button primary" type="button">Apply</button>
+            <button id="clearFiltersButton" class="button secondary" type="button">Clear</button>
+          </div>
+        </section>
       </aside>
 
       <section class="workspace">
@@ -56,6 +78,12 @@ Developer Tools</textarea>
           <div id="statusBadge" class="status-badge">Starting</div>
         </header>
 
+        <nav class="tabs" aria-label="Workspace views">
+          <button class="tab active" type="button" data-tab="opportunities">Opportunities</button>
+          <button class="tab" type="button" data-tab="connections">Connections</button>
+          <button class="tab" type="button" data-tab="setup">Setup</button>
+        </nav>
+
         <div class="metrics">
           <div><span id="countMetric">0</span><small>roles</small></div>
           <div><span id="firstMetric">0</span><small>1st degree</small></div>
@@ -63,7 +91,15 @@ Developer Tools</textarea>
           <div><span id="thirdMetric">0</span><small>3rd degree</small></div>
         </div>
 
-        <div id="opportunityList" class="opportunity-list"></div>
+        <section id="opportunitiesView" class="tab-view active">
+          <div id="opportunityList" class="opportunity-list"></div>
+        </section>
+        <section id="connectionsView" class="tab-view">
+          <div id="connectionsList" class="connection-list"></div>
+        </section>
+        <section id="setupView" class="tab-view">
+          <div id="setupPanel" class="setup-grid"></div>
+        </section>
       </section>
     </main>
     <script src="/app.js" type="module"></script>
