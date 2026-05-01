@@ -1,0 +1,15 @@
+{
+  "name": "people-connections-connector",
+  "version": "1.0.0",
+  "description": "Local LinkedIn-safe people and job opportunity connector with connection-path enrichment.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "package": "sh scripts/package-zip.sh"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

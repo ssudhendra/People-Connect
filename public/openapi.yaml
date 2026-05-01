@@ -1,0 +1,61 @@
+openapi: 3.1.0
+info:
+  title: People Connections Connector
+  version: 1.0.0
+  description: Local connector for profile, job opportunity, and connection path enrichment.
+servers:
+  - url: http://localhost:8787
+paths:
+  /api/health:
+    get:
+      operationId: getConnectorHealth
+      summary: Check connector status.
+      responses:
+        "200":
+          description: Connector status.
+  /api/profile:
+    get:
+      operationId: getConnectedProfile
+      summary: Get the connected LinkedIn or demo profile.
+      responses:
+        "200":
+          description: Profile response.
+  /api/opportunities:
+    post:
+      operationId: generateOpportunities
+      summary: Generate curated job opportunities with people and network enrichment.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                targetTitles:
+                  type: array
+                  items:
+                    type: string
+                locations:
+                  type: array
+                  items:
+                    type: string
+                industries:
+                  type: array
+                  items:
+                    type: string
+                remotePreference:
+                  type: string
+                maxResults:
+                  type: integer
+                  minimum: 50
+                  maximum: 100
+      responses:
+        "200":
+          description: Curated opportunities.
+  /api/logout:
+    post:
+      operationId: resetConnectedProfile
+      summary: Clear the local connected profile session.
+      responses:
+        "200":
+          description: Reset status.

@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "People Connections",
+  "name_for_model": "people_connections",
+  "description_for_human": "Find relevant jobs and identify hiring managers, recruiters, existing network connections, and connection paths.",
+  "description_for_model": "Use this connector to retrieve a connected profile and generate enriched job opportunities with key contacts, first-, second-, and third-degree relationship paths.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "http://localhost:8787/openapi.yaml"
+  },
+  "logo_url": "http://localhost:8787/logo.svg",
+  "contact_email": "support@example.com",
+  "legal_info_url": "http://localhost:8787/"
+}

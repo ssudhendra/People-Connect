@@ -1,0 +1,307 @@
+:root {
+  color-scheme: light;
+  --bg: #f5f7f9;
+  --ink: #17212b;
+  --muted: #5f6f7e;
+  --line: #d9e1e8;
+  --panel: #ffffff;
+  --brand: #0a66c2;
+  --brand-dark: #084c93;
+  --accent: #17815f;
+  --warn: #9a5b00;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px;
+  border-right: 1px solid var(--line);
+  background: #edf2f6;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 32px;
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: 18px;
+}
+
+.eyebrow {
+  margin-bottom: 8px;
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.summary {
+  margin-top: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.panel {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+textarea,
+input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px;
+  color: var(--ink);
+  font: inherit;
+  resize: vertical;
+}
+
+.button-row {
+  display: grid;
+  grid-template-columns: 1fr 96px;
+  gap: 10px;
+}
+
+.button {
+  min-height: 40px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font: inherit;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button.primary {
+  background: var(--brand);
+  color: white;
+}
+
+.button.primary:hover {
+  background: var(--brand-dark);
+}
+
+.button.secondary {
+  border-color: var(--line);
+  background: white;
+  color: var(--ink);
+}
+
+.button.wide {
+  width: 100%;
+}
+
+.profile-block {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.profile-block strong {
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.workspace {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 18px;
+  padding: 28px;
+  min-width: 0;
+}
+
+.workspace-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.workspace-header h2 {
+  font-size: 28px;
+}
+
+.status-badge {
+  border: 1px solid #b8d9cc;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #e9f7f1;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.metrics div {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.metrics span {
+  display: block;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.metrics small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.opportunity-list {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-width: 0;
+}
+
+.job-card {
+  display: grid;
+  grid-template-columns: 1fr minmax(240px, 32%);
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.job-main {
+  min-width: 0;
+}
+
+.job-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.job-title h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.score {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.job-meta,
+.path,
+.contact-meta {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tag {
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #eef4fb;
+  color: var(--brand-dark);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.contacts {
+  display: grid;
+  gap: 10px;
+  border-left: 1px solid var(--line);
+  padding-left: 16px;
+}
+
+.contact {
+  display: grid;
+  gap: 3px;
+}
+
+.contact strong {
+  font-size: 14px;
+}
+
+.degree {
+  color: var(--warn);
+  font-weight: 900;
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .metrics,
+  .job-card {
+    grid-template-columns: 1fr;
+  }
+
+  .contacts {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+    padding-left: 0;
+  }
+}

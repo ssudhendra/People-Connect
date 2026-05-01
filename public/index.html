@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>People Connections Connector</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="sidebar">
+        <div>
+          <p class="eyebrow">Local connector</p>
+          <h1>People Connections</h1>
+          <p class="summary">LinkedIn-safe profile auth, curated opportunities, and relationship-path enrichment.</p>
+        </div>
+        <section class="panel">
+          <h2>Profile</h2>
+          <div id="profileBlock" class="profile-block"></div>
+          <div class="button-row">
+            <a class="button primary" href="/auth/linkedin/start">Connect LinkedIn</a>
+            <button id="logoutButton" class="button secondary" type="button">Reset</button>
+          </div>
+        </section>
+        <section class="panel">
+          <h2>Search</h2>
+          <label>Target titles
+            <textarea id="titlesInput" rows="3">AI Product Manager
+Platform Product Manager
+Senior Product Manager</textarea>
+          </label>
+          <label>Locations
+            <textarea id="locationsInput" rows="3">Chicago
+Remote
+New York</textarea>
+          </label>
+          <label>Industries
+            <textarea id="industriesInput" rows="3">AI
+SaaS
+Developer Tools</textarea>
+          </label>
+          <label>Results
+            <input id="maxResultsInput" type="number" min="50" max="100" value="75">
+          </label>
+          <button id="generateButton" class="button primary wide" type="button">Generate opportunities</button>
+        </section>
+      </aside>
+
+      <section class="workspace">
+        <header class="workspace-header">
+          <div>
+            <p class="eyebrow">Opportunity map</p>
+            <h2>Curated jobs and connection paths</h2>
+          </div>
+          <div id="statusBadge" class="status-badge">Starting</div>
+        </header>
+
+        <div class="metrics">
+          <div><span id="countMetric">0</span><small>roles</small></div>
+          <div><span id="firstMetric">0</span><small>1st degree</small></div>
+          <div><span id="secondMetric">0</span><small>2nd degree</small></div>
+          <div><span id="thirdMetric">0</span><small>3rd degree</small></div>
+        </div>
+
+        <div id="opportunityList" class="opportunity-list"></div>
+      </section>
+    </main>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
