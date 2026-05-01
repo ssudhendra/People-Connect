@@ -45,6 +45,23 @@ paths:
                     type: string
                 remotePreference:
                   type: string
+                datePosted:
+                  type: string
+                  enum: [any, past-24h, past-week, past-month]
+                experienceLevel:
+                  type: string
+                  enum: [any, associate, mid-senior, director, executive]
+                workplace:
+                  type: string
+                  enum: [any, remote, hybrid, onsite]
+                jobType:
+                  type: string
+                  enum: [any, full-time, contract, part-time]
+                company:
+                  type: string
+                sort:
+                  type: string
+                  enum: [relevance, recent, network]
                 maxResults:
                   type: integer
                   minimum: 50

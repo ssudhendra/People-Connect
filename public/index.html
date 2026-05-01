@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>People Connections Connector</title>
-    <link rel="stylesheet" href="/styles.css?v=20260501-6">
+    <link rel="stylesheet" href="/styles.css?v=20260501-7">
   </head>
   <body>
     <main class="app-shell">
@@ -27,28 +27,66 @@
         </section>
         <section class="panel">
           <h2>Search</h2>
-          <label>Target titles
-            <textarea id="titlesInput" rows="3">AI Product Manager
-Platform Product Manager
-Senior Product Manager</textarea>
-          </label>
-          <div id="titleOptions" class="option-chips" aria-label="Target title options"></div>
-          <label>Locations
-            <textarea id="locationsInput" rows="3">Chicago
-Remote
-New York</textarea>
-          </label>
-          <div id="locationOptions" class="option-chips" aria-label="Location options"></div>
-          <label>Industries
-            <textarea id="industriesInput" rows="3">AI
-SaaS
-Developer Tools</textarea>
-          </label>
-          <div id="industryOptions" class="option-chips" aria-label="Industry options"></div>
+          <div class="linkedin-search">
+            <label>Search jobs
+              <input id="jobSearchInput" type="search" value="AI Product Manager" placeholder="Title, skill, or company">
+            </label>
+            <label>Location
+              <input id="jobLocationInput" type="search" value="Remote" placeholder="City, state, or remote">
+            </label>
+          </div>
+          <div id="titleOptions" class="option-chips" aria-label="Job search suggestions"></div>
+          <div id="locationOptions" class="option-chips" aria-label="Location suggestions"></div>
+          <div class="linkedin-filters">
+            <label>Date posted
+              <select id="datePostedSelect">
+                <option value="any">Any time</option>
+                <option value="past-24h">Past 24 hours</option>
+                <option value="past-week">Past week</option>
+                <option value="past-month">Past month</option>
+              </select>
+            </label>
+            <label>Experience level
+              <select id="experienceSelect">
+                <option value="any">Any level</option>
+                <option value="associate">Associate</option>
+                <option value="mid-senior">Mid-Senior level</option>
+                <option value="director">Director</option>
+                <option value="executive">Executive</option>
+              </select>
+            </label>
+            <label>Workplace
+              <select id="workplaceSelect">
+                <option value="any">Any workplace</option>
+                <option value="remote">Remote</option>
+                <option value="hybrid">Hybrid</option>
+                <option value="onsite">On-site</option>
+              </select>
+            </label>
+            <label>Job type
+              <select id="jobTypeSelect">
+                <option value="any">Any type</option>
+                <option value="full-time">Full-time</option>
+                <option value="contract">Contract</option>
+                <option value="part-time">Part-time</option>
+              </select>
+            </label>
+            <label>Company
+              <input id="companyFilterInput" type="search" placeholder="Company">
+            </label>
+            <label>Sort by
+              <select id="sortSelect">
+                <option value="relevance">Most relevant</option>
+                <option value="recent">Most recent</option>
+                <option value="network">Network strength</option>
+              </select>
+            </label>
+          </div>
+          <div id="industryOptions" class="option-chips" aria-label="Industry suggestions"></div>
           <label>Results
             <input id="maxResultsInput" type="number" min="50" max="100" value="75">
           </label>
-          <button id="generateButton" class="button primary wide" type="button">Generate opportunities</button>
+          <button id="generateButton" class="button primary wide" type="button">Search jobs</button>
         </section>
         <section class="panel">
           <h2>Filters</h2>
@@ -107,6 +145,6 @@ Developer Tools</textarea>
         </section>
       </section>
     </main>
-    <script src="/app.js?v=20260501-6" type="module"></script>
+    <script src="/app.js?v=20260501-7" type="module"></script>
   </body>
 </html>

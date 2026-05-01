@@ -33,9 +33,22 @@ const tags = [
   ["automation", "LLMs", "workflow"]
 ];
 
+const experienceLevels = ["Associate", "Mid-Senior level", "Director", "Executive"];
+const jobTypes = ["Full-time", "Contract", "Part-time"];
+const applyMethods = ["Easy Apply", "Apply"];
+const workplaceModes = ["Remote", "Hybrid", "On-site"];
+
+function formatWorkplace(location, criteria, index) {
+  if (criteria.workplace && criteria.workplace !== "any") {
+    return { remote: "Remote", hybrid: "Hybrid", onsite: "On-site" }[criteria.workplace] || criteria.workplace;
+  }
+  if (location.toLowerCase().includes("remote")) return "Remote";
+  return workplaceModes[index % workplaceModes.length];
+}
+
 export function generateDemoJobs(criteria) {
   const jobs = [];
-  const count = Math.max(criteria.maxResults, 75);
+  const count = Math.max(criteria.maxResults * 3, 120);
   for (let index = 0; index < count; index += 1) {
     const company = companies[index % companies.length];
     const title = criteria.targetTitles[index % criteria.targetTitles.length] || titlePool[index % titlePool.length];
@@ -50,7 +63,11 @@ export function generateDemoJobs(criteria) {
       company: company[0],
       industry: company[1],
       location,
-      workplace: location.toLowerCase().includes("remote") ? "Remote" : criteria.remotePreference,
+      workplace: formatWorkplace(location, criteria, index),
+      experienceLevel: experienceLevels[index % experienceLevels.length],
+      jobType: jobTypes[index % jobTypes.length],
+      applyMethod: applyMethods[index % applyMethods.length],
+      applicants: 18 + (index % 65),
       salaryRange: `$${salaryLow}k-$${salaryHigh}k`,
       posted: `${1 + (index % 21)} days ago`,
       source: "Demo provider",

@@ -22,6 +22,14 @@ const clearFiltersButton = document.querySelector("#clearFiltersButton");
 const titleOptions = document.querySelector("#titleOptions");
 const locationOptions = document.querySelector("#locationOptions");
 const industryOptions = document.querySelector("#industryOptions");
+const jobSearchInput = document.querySelector("#jobSearchInput");
+const jobLocationInput = document.querySelector("#jobLocationInput");
+const datePostedSelect = document.querySelector("#datePostedSelect");
+const experienceSelect = document.querySelector("#experienceSelect");
+const workplaceSelect = document.querySelector("#workplaceSelect");
+const jobTypeSelect = document.querySelector("#jobTypeSelect");
+const companyFilterInput = document.querySelector("#companyFilterInput");
+const sortSelect = document.querySelector("#sortSelect");
 
 let connectorHealth = null;
 let allOpportunities = [];
@@ -30,48 +38,43 @@ let visibleOpportunities = [];
 const searchOptionGroups = [
   {
     container: titleOptions,
-    textarea: document.querySelector("#titlesInput"),
+    input: jobSearchInput,
+    mode: "single",
     values: [
       "AI Product Manager",
       "Platform Product Manager",
       "Senior Product Manager",
       "Product Lead, Recruiting Intelligence",
       "Group Product Manager, Developer Experience",
-      "Principal Product Manager, Data Products"
+      "Principal Product Manager, Data Products",
+      "Recruiter",
+      "Hiring Manager"
     ]
   },
   {
     container: locationOptions,
-    textarea: document.querySelector("#locationsInput"),
-    values: ["Chicago", "Remote", "New York", "San Francisco", "Seattle", "Boston"]
+    input: jobLocationInput,
+    mode: "single",
+    values: ["Remote", "Chicago", "New York", "San Francisco", "Seattle", "Boston"]
   },
   {
     container: industryOptions,
-    textarea: document.querySelector("#industriesInput"),
+    input: null,
+    mode: "multi",
+    selected: new Set(["AI", "SaaS", "Developer Tools"]),
     values: ["AI", "SaaS", "Developer Tools", "Marketplaces", "Fintech", "Enterprise Software"]
   }
 ];
 
-function linesFrom(elementId) {
-  return document.querySelector(elementId).value
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-}
-
-function valuesFromTextarea(textarea) {
-  return textarea.value
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-}
-
-function writeTextareaValues(textarea, values) {
-  textarea.value = values.join("\n");
+function currentGroupValues(group) {
+  if (group.mode === "multi") {
+    return [...group.selected];
+  }
+  return group.input.value.trim() ? [group.input.value.trim()] : [];
 }
 
 function syncOptionGroup(group) {
-  const selected = new Set(valuesFromTextarea(group.textarea));
+  const selected = new Set(currentGroupValues(group));
   group.container.querySelectorAll(".option-chip").forEach((button) => {
     button.classList.toggle("active", selected.has(button.dataset.value));
     button.setAttribute("aria-pressed", selected.has(button.dataset.value) ? "true" : "false");
@@ -86,17 +89,20 @@ function renderSearchOptions() {
     group.container.addEventListener("click", (event) => {
       const button = event.target.closest(".option-chip");
       if (!button) return;
-      const values = valuesFromTextarea(group.textarea);
-      const selected = new Set(values);
-      if (selected.has(button.dataset.value)) {
-        selected.delete(button.dataset.value);
+      if (group.mode === "multi") {
+        if (group.selected.has(button.dataset.value)) {
+          group.selected.delete(button.dataset.value);
+        } else {
+          group.selected.add(button.dataset.value);
+        }
       } else {
-        selected.add(button.dataset.value);
+        group.input.value = button.dataset.value;
       }
-      writeTextareaValues(group.textarea, [...selected]);
       syncOptionGroup(group);
     });
-    group.textarea.addEventListener("input", () => syncOptionGroup(group));
+    if (group.input) {
+      group.input.addEventListener("input", () => syncOptionGroup(group));
+    }
     syncOptionGroup(group);
   }
 }
@@ -173,13 +179,22 @@ function jobMatchesDegree(job, degree) {
   return (job.keyContacts || []).some((contact) => contact.degree === degree);
 }
 
+function postedDays(job) {
+  const match = String(job.posted || "").match(/(\d+)/);
+  return match ? Number(match[1]) : 999;
+}
+
 function applyFilters() {
   const keyword = keywordFilter.value.trim().toLowerCase();
   const minFit = Number(minFitFilter.value || 0);
   const degree = degreeFilter.value;
-  visibleOpportunities = allOpportunities.filter((job) => {
-    return job.fitScore >= minFit && jobMatchesKeyword(job, keyword) && jobMatchesDegree(job, degree);
-  });
+  visibleOpportunities = allOpportunities
+    .filter((job) => job.fitScore >= minFit && jobMatchesKeyword(job, keyword) && jobMatchesDegree(job, degree))
+    .sort((a, b) => {
+      if (sortSelect.value === "recent") return postedDays(a) - postedDays(b);
+      if (sortSelect.value === "network") return b.networkStrength - a.networkStrength;
+      return b.fitScore - a.fitScore || b.networkStrength - a.networkStrength;
+    });
   renderOpportunities(visibleOpportunities);
   renderConnections(visibleOpportunities);
   statusBadge.textContent = `${visibleOpportunities.length} shown`;
@@ -200,6 +215,11 @@ function renderOpportunities(opportunities) {
         </div>
         <p class="job-meta">${escapeHtml(job.company)} · ${escapeHtml(job.location)} · ${escapeHtml(job.workplace)} · ${escapeHtml(job.salaryRange)} · ${escapeHtml(job.posted)}</p>
         <p class="job-meta">${escapeHtml(job.summary)}</p>
+        <div class="job-badges">
+          <span class="job-badge">${escapeHtml(job.experienceLevel || "Mid-Senior level")}</span>
+          <span class="job-badge">${escapeHtml(job.jobType || "Full-time")}</span>
+          <span class="job-badge">${escapeHtml(job.applyMethod || "Apply")}</span>
+        </div>
         <div class="tags">${(job.tags || []).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>
       </div>
       <div class="contacts">
@@ -305,12 +325,19 @@ async function generateOpportunities() {
   generateButton.disabled = true;
   try {
     searchOptionGroups.forEach(syncOptionGroup);
+    const selectedIndustries = currentGroupValues(searchOptionGroups[2]);
     const payload = await api("/api/opportunities", {
       method: "POST",
       body: JSON.stringify({
-        targetTitles: linesFrom("#titlesInput"),
-        locations: linesFrom("#locationsInput"),
-        industries: linesFrom("#industriesInput"),
+        targetTitles: currentGroupValues(searchOptionGroups[0]),
+        locations: currentGroupValues(searchOptionGroups[1]),
+        industries: selectedIndustries.length ? selectedIndustries : ["AI", "SaaS", "Developer Tools"],
+        datePosted: datePostedSelect.value,
+        experienceLevel: experienceSelect.value,
+        workplace: workplaceSelect.value,
+        jobType: jobTypeSelect.value,
+        company: companyFilterInput.value.trim(),
+        sort: sortSelect.value,
         maxResults: document.querySelector("#maxResultsInput").value
       })
     });
@@ -349,6 +376,7 @@ keywordFilter.addEventListener("keydown", (event) => {
   if (event.key === "Enter") applyFilters();
 });
 degreeFilter.addEventListener("change", applyFilters);
+sortSelect.addEventListener("change", applyFilters);
 
 logoutButton.addEventListener("click", async () => {
   statusBadge.textContent = "Resetting";

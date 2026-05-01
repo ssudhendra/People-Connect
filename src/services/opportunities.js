@@ -5,6 +5,12 @@ const defaultCriteria = {
   targetTitles: ["Product Manager", "AI Product Manager", "Platform Product Manager"],
   locations: ["Chicago", "Remote", "New York", "San Francisco"],
   industries: ["AI", "SaaS", "Developer Tools", "Marketplaces"],
+  datePosted: "any",
+  experienceLevel: "any",
+  workplace: "any",
+  jobType: "any",
+  company: "",
+  sort: "relevance",
   maxResults: 75,
   remotePreference: "hybrid"
 };
@@ -20,7 +26,13 @@ function normalizeCriteria(payload = {}) {
     targetTitles: payload.targetTitles?.length ? payload.targetTitles : defaultCriteria.targetTitles,
     locations: payload.locations?.length ? payload.locations : defaultCriteria.locations,
     industries: payload.industries?.length ? payload.industries : defaultCriteria.industries,
-    remotePreference: payload.remotePreference || defaultCriteria.remotePreference,
+    datePosted: payload.datePosted || defaultCriteria.datePosted,
+    experienceLevel: payload.experienceLevel || defaultCriteria.experienceLevel,
+    workplace: payload.workplace || payload.remotePreference || defaultCriteria.workplace,
+    jobType: payload.jobType || defaultCriteria.jobType,
+    company: payload.company || defaultCriteria.company,
+    sort: payload.sort || defaultCriteria.sort,
+    remotePreference: payload.remotePreference || payload.workplace || defaultCriteria.remotePreference,
     maxResults: clampResultCount(payload.maxResults)
   };
 }
@@ -81,6 +93,43 @@ function enrichJob(job, profile) {
   };
 }
 
+function normalized(value) {
+  return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function postedDays(job) {
+  const match = String(job.posted || "").match(/(\d+)/);
+  return match ? Number(match[1]) : 999;
+}
+
+function datePostedLimit(value) {
+  return {
+    "past-24h": 1,
+    "past-week": 7,
+    "past-month": 30
+  }[value] || null;
+}
+
+function matchesCriteria(job, criteria) {
+  const companyFilter = normalized(criteria.company);
+  if (companyFilter && !normalized(job.company).includes(companyFilter)) return false;
+
+  if (criteria.workplace !== "any" && normalized(job.workplace) !== normalized(criteria.workplace)) return false;
+  if (criteria.jobType !== "any" && normalized(job.jobType) !== normalized(criteria.jobType)) return false;
+  if (criteria.experienceLevel !== "any" && !normalized(job.experienceLevel).includes(normalized(criteria.experienceLevel))) return false;
+
+  const limit = datePostedLimit(criteria.datePosted);
+  if (limit && postedDays(job) > limit) return false;
+
+  return true;
+}
+
+function sortJobs(a, b, criteria) {
+  if (criteria.sort === "recent") return postedDays(a) - postedDays(b) || b.fitScore - a.fitScore;
+  if (criteria.sort === "network") return b.networkStrength - a.networkStrength || b.fitScore - a.fitScore;
+  return b.fitScore - a.fitScore || b.networkStrength - a.networkStrength;
+}
+
 async function fetchExternalJobs(criteria) {
   if (process.env.CONNECTOR_MODE !== "live" || !process.env.JOB_SOURCE_API_URL) return null;
   const response = await fetch(process.env.JOB_SOURCE_API_URL, {
@@ -105,6 +154,7 @@ export async function createOpportunities(profile, payload = {}) {
       ...enrichJob(job, profile),
       fitScore: scoreJob(job, profile, criteria)
     }))
-    .sort((a, b) => b.fitScore - a.fitScore || b.networkStrength - a.networkStrength)
+    .filter((job) => matchesCriteria(job, criteria))
+    .sort((a, b) => sortJobs(a, b, criteria))
     .slice(0, criteria.maxResults);
 }

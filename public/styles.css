@@ -107,6 +107,16 @@ select {
   font-weight: 800;
 }
 
+.linkedin-search,
+.linkedin-filters {
+  display: grid;
+  gap: 10px;
+}
+
+.linkedin-search {
+  grid-template-columns: 1fr;
+}
+
 .option-chips {
   display: flex;
   flex-wrap: wrap;
@@ -398,6 +408,19 @@ select {
   padding: 5px 9px;
   background: #eef4fb;
   color: var(--brand-dark);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.job-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.job-badge {
+  color: var(--muted);
   font-size: 12px;
   font-weight: 800;
 }
