@@ -60,3 +60,12 @@ export function signInWithDemoProfile(session) {
   session.oauth = null;
   return session.profile;
 }
+
+export function logoutSession(session, res) {
+  if (session?.id) {
+    sessions.delete(session.id);
+  }
+  res.setHeader("set-cookie", [
+    "pc_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0"
+  ]);
+}

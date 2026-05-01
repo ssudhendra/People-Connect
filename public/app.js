@@ -145,11 +145,16 @@ async function copyText(value) {
 }
 
 function renderProfile(profile, authenticated) {
+  const connectionState = profile.provider === "linkedin"
+    ? "LinkedIn connected"
+    : profile.provider === "local" && authenticated
+      ? "Local login active"
+      : "Demo profile active";
   profileBlock.innerHTML = `
     <strong>${escapeHtml(profile.name || "Demo member")}</strong>
     <span>${escapeHtml(profile.headline || "No headline available")}</span>
     <span>${escapeHtml(profile.email || "No email connected")}</span>
-    <span>${authenticated ? "LinkedIn connected" : "Demo profile active"}</span>
+    <span>${connectionState}</span>
   `;
 }
 
@@ -322,7 +327,7 @@ async function loadHealth() {
     connectLegacyButton.setAttribute("href", "/auth/linkedin/start?authType=legacy");
     connectLinkedInButton.setAttribute("aria-disabled", "false");
     connectLegacyButton.setAttribute("aria-disabled", "false");
-    configMessage.textContent = `LinkedIn callback: ${connectorHealth.linkedInRedirectUri}`;
+    configMessage.textContent = "LinkedIn sign-in is ready. Use Connect LinkedIn or Try Legacy based on your app product.";
     return;
   }
 
@@ -332,7 +337,7 @@ async function loadHealth() {
   connectLegacyButton.setAttribute("href", "#");
   connectLinkedInButton.setAttribute("aria-disabled", "true");
   connectLegacyButton.setAttribute("aria-disabled", "true");
-  configMessage.textContent = "LinkedIn sign-in needs LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET in .env. Demo mode is active.";
+  configMessage.textContent = "LinkedIn sign-in needs LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET in .env. Local Login still works.";
 }
 
 async function generateOpportunities() {
@@ -395,7 +400,7 @@ degreeFilter.addEventListener("change", applyFilters);
 sortSelect.addEventListener("change", applyFilters);
 
 logoutButton.addEventListener("click", async () => {
-  statusBadge.textContent = "Resetting";
+  statusBadge.textContent = "Logging out";
   try {
     await api("/api/logout", { method: "POST", body: "{}" });
     keywordFilter.value = "";
@@ -404,6 +409,7 @@ logoutButton.addEventListener("click", async () => {
     degreeFilter.value = "all";
     await loadProfile();
     await generateOpportunities();
+    statusBadge.textContent = "Logged out";
   } catch (error) {
     statusBadge.textContent = error.message;
   }
@@ -423,8 +429,18 @@ connectLegacyButton.addEventListener("click", async (event) => {
     configMessage.textContent = "Add LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET to .env, then restart npm start.";
   }
 });
-localLoginButton.addEventListener("click", () => {
+localLoginButton.addEventListener("click", async () => {
   statusBadge.textContent = "Signing in locally";
+  localLoginButton.disabled = true;
+  try {
+    const payload = await api("/api/local-login", { method: "POST", body: "{}" });
+    renderProfile(payload.profile, true);
+    await generateOpportunities();
+  } catch (error) {
+    statusBadge.textContent = error.message;
+  } finally {
+    localLoginButton.disabled = false;
+  }
 });
 
 document.querySelectorAll(".tab").forEach((tab) => {

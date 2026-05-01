@@ -5,7 +5,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildAuthorizationUrl, exchangeCodeForToken, fetchLinkedInProfile, getLinkedInAuthType, getLinkedInScopes, getOAuthFlow, isPkceFlow, normalizeLinkedInAuthType } from "./services/linkedin.js";
-import { getProfileForSession, getSession, signInWithDemoProfile } from "./services/session.js";
+import { getProfileForSession, getSession, logoutSession, signInWithDemoProfile } from "./services/session.js";
 import { createOpportunities, getJobSourceStatus } from "./services/opportunities.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -179,8 +179,7 @@ async function handleApi(req, res) {
   }
 
   if (req.method === "POST" && url.pathname === "/api/logout") {
-    session.profile = null;
-    session.tokens = null;
+    logoutSession(session, res);
     sendJson(res, 200, { ok: true });
     return;
   }
