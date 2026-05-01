@@ -68,7 +68,7 @@ paths:
                   maximum: 100
       responses:
         "200":
-          description: Curated opportunities.
+          description: Curated opportunities and job source status.
   /api/logout:
     post:
       operationId: resetConnectedProfile

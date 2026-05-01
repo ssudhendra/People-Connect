@@ -425,6 +425,21 @@ select {
   font-weight: 800;
 }
 
+.job-link {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 10px;
+  color: var(--brand);
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.job-link:hover {
+  color: var(--brand-dark);
+  text-decoration: underline;
+}
+
 .contacts {
   display: grid;
   gap: 10px;

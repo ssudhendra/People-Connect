@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildAuthorizationUrl, exchangeCodeForToken, fetchLinkedInProfile, getLinkedInAuthType, getLinkedInScopes, getOAuthFlow, isPkceFlow, normalizeLinkedInAuthType } from "./services/linkedin.js";
 import { getProfileForSession, getSession, signInWithDemoProfile } from "./services/session.js";
-import { createOpportunities } from "./services/opportunities.js";
+import { createOpportunities, getJobSourceStatus } from "./services/opportunities.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
@@ -155,7 +155,8 @@ async function handleApi(req, res) {
         `http://127.0.0.1:${PORT}/auth/linkedin/callback`
       ],
       linkedInAuthOptions: linkedInAuthOptions(req),
-      jobSourceConfigured: Boolean(process.env.JOB_SOURCE_API_URL),
+      jobSourceConfigured: getJobSourceStatus().configured,
+      jobSourceStatus: getJobSourceStatus(),
       baseUrl: PUBLIC_BASE_URL
     });
     return;
@@ -173,7 +174,7 @@ async function handleApi(req, res) {
     const payload = await readBody(req);
     const profile = getProfileForSession(session);
     const opportunities = await createOpportunities(profile, payload);
-    sendJson(res, 200, { profile, opportunities });
+    sendJson(res, 200, { profile, opportunities, jobSourceStatus: getJobSourceStatus() });
     return;
   }
 

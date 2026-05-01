@@ -34,6 +34,7 @@ const sortSelect = document.querySelector("#sortSelect");
 let connectorHealth = null;
 let allOpportunities = [];
 let visibleOpportunities = [];
+let currentJobSourceStatus = null;
 
 const searchOptionGroups = [
   {
@@ -180,7 +181,14 @@ function jobMatchesDegree(job, degree) {
 }
 
 function postedDays(job) {
-  const match = String(job.posted || "").match(/(\d+)/);
+  const raw = String(job.posted || "").trim();
+  if (/today|just|hour|minute/i.test(raw)) return 0;
+  if (/yesterday/i.test(raw)) return 1;
+  const parsedDate = Date.parse(raw);
+  if (!Number.isNaN(parsedDate)) {
+    return Math.max(0, Math.floor((Date.now() - parsedDate) / 86_400_000));
+  }
+  const match = raw.match(/(\d+)/);
   return match ? Number(match[1]) : 999;
 }
 
@@ -197,7 +205,8 @@ function applyFilters() {
     });
   renderOpportunities(visibleOpportunities);
   renderConnections(visibleOpportunities);
-  statusBadge.textContent = `${visibleOpportunities.length} shown`;
+  const source = currentJobSourceStatus?.mode === "live-provider" ? currentJobSourceStatus.providerName : "Demo data";
+  statusBadge.textContent = `${visibleOpportunities.length} shown · ${source}`;
 }
 
 function renderOpportunities(opportunities) {
@@ -214,12 +223,14 @@ function renderOpportunities(opportunities) {
           <span class="score">${escapeHtml(job.fitScore)}% fit</span>
         </div>
         <p class="job-meta">${escapeHtml(job.company)} · ${escapeHtml(job.location)} · ${escapeHtml(job.workplace)} · ${escapeHtml(job.salaryRange)} · ${escapeHtml(job.posted)}</p>
+        <p class="job-meta">${escapeHtml(job.source || "Demo provider")}${job.applicants ? ` · ${escapeHtml(job.applicants)} applicants` : ""}</p>
         <p class="job-meta">${escapeHtml(job.summary)}</p>
         <div class="job-badges">
           <span class="job-badge">${escapeHtml(job.experienceLevel || "Mid-Senior level")}</span>
           <span class="job-badge">${escapeHtml(job.jobType || "Full-time")}</span>
           <span class="job-badge">${escapeHtml(job.applyMethod || "Apply")}</span>
         </div>
+        ${job.jobUrl ? `<a class="job-link" href="${escapeHtml(job.jobUrl)}" target="_blank" rel="noreferrer">View job</a>` : ""}
         <div class="tags">${(job.tags || []).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>
       </div>
       <div class="contacts">
@@ -282,11 +293,15 @@ function renderSetup() {
   }
   const localRedirects = connectorHealth.linkedInLocalRedirectUris || [];
   const authOptions = connectorHealth.linkedInAuthOptions || [];
+  const jobSourceStatus = connectorHealth.jobSourceStatus || {};
   setupPanel.innerHTML = [
     setupItem("Active LinkedIn redirect URI", connectorHealth.linkedInRedirectUri),
     setupItem("LinkedIn auth type", connectorHealth.linkedInAuthType),
     setupItem("OAuth flow", connectorHealth.linkedInOAuthFlow),
     setupItem("OAuth scopes", connectorHealth.linkedInScopes),
+    setupItem("Job source mode", jobSourceStatus.mode || "demo"),
+    setupItem("Job source provider", jobSourceStatus.providerName || "Demo provider"),
+    setupItem("Exact live jobs required", jobSourceStatus.exactRequired ? "true" : "false"),
     ...localRedirects.map((uri, index) => setupItem(`LinkedIn portal callback ${index + 1}`, uri)),
     ...authOptions.map((option) => setupItem(`LinkedIn ${option.authType} start URL`, option.startUrl))
   ].join("");
@@ -342,6 +357,7 @@ async function generateOpportunities() {
       })
     });
     allOpportunities = payload.opportunities;
+    currentJobSourceStatus = payload.jobSourceStatus || connectorHealth?.jobSourceStatus || null;
     renderProfile(payload.profile, payload.profile.provider === "linkedin");
     applyFilters();
   } catch (error) {

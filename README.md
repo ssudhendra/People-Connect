@@ -26,7 +26,7 @@ Use that ZIP when an AI tool asks you to upload or install a custom connector pa
 
 LinkedIn's self-serve Sign In with LinkedIn product supports OIDC profile and email scopes. Broad job search, recruiter discovery, and member connection graph access are not generally available through public self-serve APIs. This connector avoids scraping and password collection. It uses provider interfaces so approved LinkedIn Partner APIs, ATS APIs, CRM exports, or user-provided network exports can be connected later.
 
-To show exact live LinkedIn Jobs data, configure `CONNECTOR_MODE=live` and point `JOB_SOURCE_API_URL` to an approved LinkedIn Talent Solutions/Jobs API integration or another licensed jobs provider. Without that approved source, the app uses generated demo jobs that exercise the same filters and enrichment flow.
+To show exact live LinkedIn Jobs data, configure `CONNECTOR_MODE=live` and point `JOB_SOURCE_API_URL` to an approved LinkedIn Talent Solutions/Jobs API integration or another licensed jobs provider. Without that approved source, the app uses generated demo jobs that exercise the same filters and enrichment flow. Set `REQUIRE_LIVE_JOB_SOURCE=true` when you want the API to fail instead of falling back to demo data.
 
 ## Run locally
 
@@ -62,6 +62,10 @@ LINKEDIN_AUTH_TYPE=oidc
 LINKEDIN_SCOPES=openid profile email
 LINKEDIN_OAUTH_FLOW=web
 CONNECTOR_MODE=live
+JOB_SOURCE_API_URL=https://your-approved-jobs-provider.example/search
+JOB_SOURCE_API_KEY=your-provider-token
+JOB_SOURCE_PROVIDER_NAME=LinkedIn Jobs
+REQUIRE_LIVE_JOB_SOURCE=true
 ```
 
 5. Restart:
@@ -75,6 +79,35 @@ Use `LINKEDIN_AUTH_TYPE=oidc` for self-serve **Sign In with LinkedIn using OpenI
 LinkedIn requires an exact redirect URI match. `LINKEDIN_REDIRECT_URI=auto` sends a callback matching the host you opened, so registering both local URLs prevents localhost versus 127.0.0.1 mismatches.
 
 If your LinkedIn app has the older **Sign In with LinkedIn** product, set `LINKEDIN_AUTH_TYPE=legacy` and `LINKEDIN_SCOPES=r_liteprofile r_emailaddress`.
+
+## Live jobs provider contract
+
+When `CONNECTOR_MODE=live` and `JOB_SOURCE_API_URL` is configured, Search posts this payload to the provider:
+
+```json
+{
+  "source": "linkedin-jobs-search",
+  "keywords": "AI Product Manager",
+  "location": "Remote",
+  "filters": {
+    "industries": ["AI", "SaaS"],
+    "datePosted": "past-week",
+    "experienceLevel": "mid-senior",
+    "workplace": "remote",
+    "jobType": "full-time",
+    "company": "LinkedIn",
+    "sort": "recent",
+    "maxResults": 75
+  },
+  "profile": {
+    "name": "Connected Member",
+    "headline": "Product leader",
+    "skills": ["AI", "SaaS"]
+  }
+}
+```
+
+The provider should return an array or `{ "jobs": [...] }`. Each job can include `title`, `company`, `industry`, `location`, `workplace`, `salaryRange`, `posted`, `experienceLevel`, `jobType`, `applyMethod`, `applicants`, `jobUrl`, `tags`, and `summary`.
 
 ## Connector endpoints
 

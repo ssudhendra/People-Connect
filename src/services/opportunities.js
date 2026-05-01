@@ -15,6 +15,23 @@ const defaultCriteria = {
   remotePreference: "hybrid"
 };
 
+function enabled(value) {
+  return ["1", "true", "yes", "on"].includes(String(value || "").toLowerCase());
+}
+
+export function getJobSourceStatus() {
+  const configured = Boolean(process.env.JOB_SOURCE_API_URL);
+  const liveMode = process.env.CONNECTOR_MODE === "live";
+  const exactRequired = enabled(process.env.REQUIRE_LIVE_JOB_SOURCE);
+  return {
+    configured,
+    liveMode,
+    exactRequired,
+    providerName: process.env.JOB_SOURCE_PROVIDER_NAME || (configured ? "Configured jobs provider" : "Demo provider"),
+    mode: liveMode && configured ? "live-provider" : "demo"
+  };
+}
+
 function clampResultCount(value) {
   const parsed = Number(value || defaultCriteria.maxResults);
   if (Number.isNaN(parsed)) return defaultCriteria.maxResults;
@@ -70,6 +87,9 @@ function enrichJob(job, profile) {
     workplace: "Hybrid",
     salaryRange: "Not listed",
     posted: "Recently posted",
+    applicants: null,
+    applyMethod: "Apply",
+    jobUrl: "",
     summary: "Role details are available from the configured job provider.",
     ...job
   };
@@ -98,7 +118,14 @@ function normalized(value) {
 }
 
 function postedDays(job) {
-  const match = String(job.posted || "").match(/(\d+)/);
+  const raw = String(job.posted || "").trim();
+  if (/today|just|hour|minute/i.test(raw)) return 0;
+  if (/yesterday/i.test(raw)) return 1;
+  const parsedDate = Date.parse(raw);
+  if (!Number.isNaN(parsedDate)) {
+    return Math.max(0, Math.floor((Date.now() - parsedDate) / 86_400_000));
+  }
+  const match = raw.match(/(\d+)/);
   return match ? Number(match[1]) : 999;
 }
 
@@ -130,23 +157,73 @@ function sortJobs(a, b, criteria) {
   return b.fitScore - a.fitScore || b.networkStrength - a.networkStrength;
 }
 
-async function fetchExternalJobs(criteria) {
-  if (process.env.CONNECTOR_MODE !== "live" || !process.env.JOB_SOURCE_API_URL) return null;
+function buildProviderPayload(criteria, profile) {
+  return {
+    source: "linkedin-jobs-search",
+    keywords: criteria.targetTitles.join(" OR "),
+    location: criteria.locations.join(" OR "),
+    filters: {
+      industries: criteria.industries,
+      datePosted: criteria.datePosted,
+      experienceLevel: criteria.experienceLevel,
+      workplace: criteria.workplace,
+      jobType: criteria.jobType,
+      company: criteria.company,
+      sort: criteria.sort,
+      maxResults: criteria.maxResults
+    },
+    profile: {
+      name: profile.name,
+      headline: profile.headline,
+      skills: profile.skills || []
+    }
+  };
+}
+
+function jobSourceHeaders() {
+  const headers = { "content-type": "application/json" };
+  if (process.env.JOB_SOURCE_API_KEY) {
+    headers[process.env.JOB_SOURCE_AUTH_HEADER || "authorization"] = `Bearer ${process.env.JOB_SOURCE_API_KEY}`;
+  }
+  return headers;
+}
+
+function normalizeProviderJobs(payload) {
+  const jobs = Array.isArray(payload) ? payload : payload.jobs || payload.results || payload.elements;
+  if (!Array.isArray(jobs)) {
+    throw new Error("Job source response must be an array or include jobs/results/elements.");
+  }
+  return jobs;
+}
+
+async function fetchExternalJobs(criteria, profile) {
+  const sourceStatus = getJobSourceStatus();
+  if (!sourceStatus.configured) {
+    if (sourceStatus.exactRequired) {
+      throw new Error("Exact LinkedIn Jobs data requires JOB_SOURCE_API_URL from an approved LinkedIn Jobs/Talent provider.");
+    }
+    return null;
+  }
+  if (!sourceStatus.liveMode) return null;
+
   const response = await fetch(process.env.JOB_SOURCE_API_URL, {
     method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(criteria)
+    headers: jobSourceHeaders(),
+    body: JSON.stringify(buildProviderPayload(criteria, profile))
   });
   if (!response.ok) {
     throw new Error(`Job source failed with ${response.status}`);
   }
   const payload = await response.json();
-  return Array.isArray(payload) ? payload : payload.jobs;
+  return normalizeProviderJobs(payload).map((job) => ({
+    source: sourceStatus.providerName,
+    ...job
+  }));
 }
 
 export async function createOpportunities(profile, payload = {}) {
   const criteria = normalizeCriteria(payload);
-  const externalJobs = await fetchExternalJobs(criteria);
+  const externalJobs = await fetchExternalJobs(criteria, profile);
   const jobs = externalJobs || generateDemoJobs(criteria);
 
   return jobs
