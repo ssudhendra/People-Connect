@@ -107,6 +107,32 @@ select {
   font-weight: 800;
 }
 
+.option-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: -6px;
+}
+
+.option-chip {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: white;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.option-chip.active {
+  border-color: #98c7f2;
+  background: #eef6ff;
+  color: var(--brand-dark);
+}
+
 .button-row {
   display: grid;
   grid-template-columns: 1fr 96px;

@@ -19,16 +19,86 @@ const minFitValue = document.querySelector("#minFitValue");
 const degreeFilter = document.querySelector("#degreeFilter");
 const applyFiltersButton = document.querySelector("#applyFiltersButton");
 const clearFiltersButton = document.querySelector("#clearFiltersButton");
+const titleOptions = document.querySelector("#titleOptions");
+const locationOptions = document.querySelector("#locationOptions");
+const industryOptions = document.querySelector("#industryOptions");
 
 let connectorHealth = null;
 let allOpportunities = [];
 let visibleOpportunities = [];
+
+const searchOptionGroups = [
+  {
+    container: titleOptions,
+    textarea: document.querySelector("#titlesInput"),
+    values: [
+      "AI Product Manager",
+      "Platform Product Manager",
+      "Senior Product Manager",
+      "Product Lead, Recruiting Intelligence",
+      "Group Product Manager, Developer Experience",
+      "Principal Product Manager, Data Products"
+    ]
+  },
+  {
+    container: locationOptions,
+    textarea: document.querySelector("#locationsInput"),
+    values: ["Chicago", "Remote", "New York", "San Francisco", "Seattle", "Boston"]
+  },
+  {
+    container: industryOptions,
+    textarea: document.querySelector("#industriesInput"),
+    values: ["AI", "SaaS", "Developer Tools", "Marketplaces", "Fintech", "Enterprise Software"]
+  }
+];
 
 function linesFrom(elementId) {
   return document.querySelector(elementId).value
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
+}
+
+function valuesFromTextarea(textarea) {
+  return textarea.value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function writeTextareaValues(textarea, values) {
+  textarea.value = values.join("\n");
+}
+
+function syncOptionGroup(group) {
+  const selected = new Set(valuesFromTextarea(group.textarea));
+  group.container.querySelectorAll(".option-chip").forEach((button) => {
+    button.classList.toggle("active", selected.has(button.dataset.value));
+    button.setAttribute("aria-pressed", selected.has(button.dataset.value) ? "true" : "false");
+  });
+}
+
+function renderSearchOptions() {
+  for (const group of searchOptionGroups) {
+    group.container.innerHTML = group.values.map((value) => `
+      <button class="option-chip" type="button" data-value="${escapeHtml(value)}" aria-pressed="false">${escapeHtml(value)}</button>
+    `).join("");
+    group.container.addEventListener("click", (event) => {
+      const button = event.target.closest(".option-chip");
+      if (!button) return;
+      const values = valuesFromTextarea(group.textarea);
+      const selected = new Set(values);
+      if (selected.has(button.dataset.value)) {
+        selected.delete(button.dataset.value);
+      } else {
+        selected.add(button.dataset.value);
+      }
+      writeTextareaValues(group.textarea, [...selected]);
+      syncOptionGroup(group);
+    });
+    group.textarea.addEventListener("input", () => syncOptionGroup(group));
+    syncOptionGroup(group);
+  }
 }
 
 function escapeHtml(value) {
@@ -234,6 +304,7 @@ async function generateOpportunities() {
   statusBadge.textContent = "Generating";
   generateButton.disabled = true;
   try {
+    searchOptionGroups.forEach(syncOptionGroup);
     const payload = await api("/api/opportunities", {
       method: "POST",
       body: JSON.stringify({
@@ -330,4 +401,5 @@ if (authError) {
 
 await loadHealth();
 await loadProfile();
+renderSearchOptions();
 await generateOpportunities();
