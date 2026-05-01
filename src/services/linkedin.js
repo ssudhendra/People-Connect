@@ -45,15 +45,33 @@ export function isPkceFlow() {
   return getOAuthFlow() === "local-pkce";
 }
 
+export function getLinkedInAuthType() {
+  const configured = process.env.LINKEDIN_AUTH_TYPE;
+  if (configured === "oidc" || configured === "legacy") {
+    return configured;
+  }
+
+  const scopes = (process.env.LINKEDIN_SCOPES || "").split(/\s+/).filter(Boolean);
+  if (scopes.some((scope) => ["openid", "profile", "email"].includes(scope))) {
+    return "oidc";
+  }
+  return "legacy";
+}
+
 export function getLinkedInScopes() {
   const configured = process.env.LINKEDIN_SCOPES;
   if (!isPkceFlow()) {
+    const authType = getLinkedInAuthType();
     if (!configured) {
-      return "openid profile email";
+      return authType === "oidc" ? "openid profile email" : "r_liteprofile r_emailaddress";
     }
     const scopes = configured.split(/\s+/).filter(Boolean);
     const hasLegacyScope = scopes.some((scope) => ["r_liteprofile", "r_emailaddress"].includes(scope));
-    return hasLegacyScope ? "openid profile email" : scopes.join(" ");
+    const hasOpenIdScope = scopes.some((scope) => ["openid", "profile", "email"].includes(scope));
+    if (authType === "oidc") {
+      return hasLegacyScope ? "openid profile email" : scopes.join(" ");
+    }
+    return hasOpenIdScope ? "r_liteprofile r_emailaddress" : scopes.join(" ");
   }
 
   if (!configured) {
@@ -160,7 +178,7 @@ async function fetchLegacyProfile(tokens) {
 }
 
 export async function fetchLinkedInProfile(tokens) {
-  if (isPkceFlow()) {
+  if (isPkceFlow() || getLinkedInAuthType() === "legacy") {
     return fetchLegacyProfile(tokens);
   }
 

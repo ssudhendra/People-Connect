@@ -191,6 +191,7 @@ function renderSetup() {
   const localRedirects = connectorHealth.linkedInLocalRedirectUris || [];
   setupPanel.innerHTML = [
     setupItem("Active LinkedIn redirect URI", connectorHealth.linkedInRedirectUri),
+    setupItem("LinkedIn auth type", connectorHealth.linkedInAuthType),
     setupItem("OAuth flow", connectorHealth.linkedInOAuthFlow),
     setupItem("OAuth scopes", connectorHealth.linkedInScopes),
     ...localRedirects.map((uri, index) => setupItem(`LinkedIn portal callback ${index + 1}`, uri))
