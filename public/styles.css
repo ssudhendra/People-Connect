@@ -77,6 +77,13 @@ h2 {
   background: var(--panel);
 }
 
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 label {
   display: grid;
   gap: 7px;
@@ -180,6 +187,12 @@ select {
   border-color: var(--line);
   background: white;
   color: var(--ink);
+}
+
+.button.compact {
+  min-height: 34px;
+  padding: 7px 10px;
+  font-size: 12px;
 }
 
 .button.disabled,

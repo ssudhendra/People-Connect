@@ -4,10 +4,9 @@ const opportunityList = document.querySelector("#opportunityList");
 const connectionsList = document.querySelector("#connectionsList");
 const setupPanel = document.querySelector("#setupPanel");
 const generateButton = document.querySelector("#generateButton");
+const resetSearchButton = document.querySelector("#resetSearchButton");
 const logoutButton = document.querySelector("#logoutButton");
 const connectLinkedInButton = document.querySelector("#connectLinkedInButton");
-const connectLegacyButton = document.querySelector("#connectLegacyButton");
-const localLoginButton = document.querySelector("#localLoginButton");
 const configMessage = document.querySelector("#configMessage");
 const countMetric = document.querySelector("#countMetric");
 const firstMetric = document.querySelector("#firstMetric");
@@ -30,11 +29,25 @@ const workplaceSelect = document.querySelector("#workplaceSelect");
 const jobTypeSelect = document.querySelector("#jobTypeSelect");
 const companyFilterInput = document.querySelector("#companyFilterInput");
 const sortSelect = document.querySelector("#sortSelect");
+const maxResultsInput = document.querySelector("#maxResultsInput");
 
 let connectorHealth = null;
 let allOpportunities = [];
 let visibleOpportunities = [];
 let currentJobSourceStatus = null;
+
+const defaultSearchState = {
+  title: "AI Product Manager",
+  location: "Remote",
+  industries: ["AI", "SaaS", "Developer Tools"],
+  datePosted: "any",
+  experienceLevel: "any",
+  workplace: "any",
+  jobType: "any",
+  company: "",
+  sort: "relevance",
+  maxResults: "75"
+};
 
 const searchOptionGroups = [
   {
@@ -62,7 +75,7 @@ const searchOptionGroups = [
     container: industryOptions,
     input: null,
     mode: "multi",
-    selected: new Set(["AI", "SaaS", "Developer Tools"]),
+    selected: new Set(defaultSearchState.industries),
     values: ["AI", "SaaS", "Developer Tools", "Marketplaces", "Fintech", "Enterprise Software"]
   }
 ];
@@ -322,22 +335,16 @@ async function loadHealth() {
   renderSetup();
   if (connectorHealth.linkedInConfigured) {
     connectLinkedInButton.classList.remove("disabled");
-    connectLegacyButton.classList.remove("disabled");
     connectLinkedInButton.setAttribute("href", "/auth/linkedin/start?authType=oidc");
-    connectLegacyButton.setAttribute("href", "/auth/linkedin/start?authType=legacy");
     connectLinkedInButton.setAttribute("aria-disabled", "false");
-    connectLegacyButton.setAttribute("aria-disabled", "false");
-    configMessage.textContent = "LinkedIn sign-in is ready. Use Connect LinkedIn or Try Legacy based on your app product.";
+    configMessage.textContent = "LinkedIn sign-in is ready.";
     return;
   }
 
   connectLinkedInButton.classList.add("disabled");
-  connectLegacyButton.classList.add("disabled");
   connectLinkedInButton.setAttribute("href", "#");
-  connectLegacyButton.setAttribute("href", "#");
   connectLinkedInButton.setAttribute("aria-disabled", "true");
-  connectLegacyButton.setAttribute("aria-disabled", "true");
-  configMessage.textContent = "LinkedIn sign-in needs LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET in .env. Local Login still works.";
+  configMessage.textContent = "LinkedIn sign-in needs LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET in .env.";
 }
 
 async function generateOpportunities() {
@@ -358,12 +365,12 @@ async function generateOpportunities() {
         jobType: jobTypeSelect.value,
         company: companyFilterInput.value.trim(),
         sort: sortSelect.value,
-        maxResults: document.querySelector("#maxResultsInput").value
+        maxResults: maxResultsInput.value
       })
     });
     allOpportunities = payload.opportunities;
     currentJobSourceStatus = payload.jobSourceStatus || connectorHealth?.jobSourceStatus || null;
-    renderProfile(payload.profile, payload.profile.provider === "linkedin");
+    renderProfile(payload.profile, payload.profile.provider !== "demo");
     applyFilters();
   } catch (error) {
     statusBadge.textContent = error.message;
@@ -381,13 +388,42 @@ function setActiveTab(name) {
   });
 }
 
-generateButton.addEventListener("click", generateOpportunities);
-applyFiltersButton.addEventListener("click", applyFilters);
-clearFiltersButton.addEventListener("click", () => {
+function resetResultFilters() {
   keywordFilter.value = "";
   minFitFilter.value = "0";
   minFitValue.textContent = "0%";
   degreeFilter.value = "all";
+}
+
+async function resetSearch() {
+  statusBadge.textContent = "Resetting search";
+  resetSearchButton.disabled = true;
+  try {
+    jobSearchInput.value = defaultSearchState.title;
+    jobLocationInput.value = defaultSearchState.location;
+    searchOptionGroups[2].selected = new Set(defaultSearchState.industries);
+    datePostedSelect.value = defaultSearchState.datePosted;
+    experienceSelect.value = defaultSearchState.experienceLevel;
+    workplaceSelect.value = defaultSearchState.workplace;
+    jobTypeSelect.value = defaultSearchState.jobType;
+    companyFilterInput.value = defaultSearchState.company;
+    sortSelect.value = defaultSearchState.sort;
+    maxResultsInput.value = defaultSearchState.maxResults;
+    resetResultFilters();
+    searchOptionGroups.forEach(syncOptionGroup);
+    await generateOpportunities();
+  } catch (error) {
+    statusBadge.textContent = error.message;
+  } finally {
+    resetSearchButton.disabled = false;
+  }
+}
+
+generateButton.addEventListener("click", generateOpportunities);
+resetSearchButton.addEventListener("click", resetSearch);
+applyFiltersButton.addEventListener("click", applyFilters);
+clearFiltersButton.addEventListener("click", () => {
+  resetResultFilters();
   applyFilters();
 });
 minFitFilter.addEventListener("input", () => {
@@ -403,10 +439,7 @@ logoutButton.addEventListener("click", async () => {
   statusBadge.textContent = "Logging out";
   try {
     await api("/api/logout", { method: "POST", body: "{}" });
-    keywordFilter.value = "";
-    minFitFilter.value = "0";
-    minFitValue.textContent = "0%";
-    degreeFilter.value = "all";
+    resetResultFilters();
     await loadProfile();
     await generateOpportunities();
     statusBadge.textContent = "Logged out";
@@ -420,26 +453,6 @@ connectLinkedInButton.addEventListener("click", async (event) => {
     event.preventDefault();
     statusBadge.textContent = "LinkedIn config needed";
     configMessage.textContent = "Add LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET to .env, then restart npm start.";
-  }
-});
-connectLegacyButton.addEventListener("click", async (event) => {
-  if (!connectorHealth?.linkedInConfigured) {
-    event.preventDefault();
-    statusBadge.textContent = "LinkedIn config needed";
-    configMessage.textContent = "Add LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET to .env, then restart npm start.";
-  }
-});
-localLoginButton.addEventListener("click", async () => {
-  statusBadge.textContent = "Signing in locally";
-  localLoginButton.disabled = true;
-  try {
-    const payload = await api("/api/local-login", { method: "POST", body: "{}" });
-    renderProfile(payload.profile, true);
-    await generateOpportunities();
-  } catch (error) {
-    statusBadge.textContent = error.message;
-  } finally {
-    localLoginButton.disabled = false;
   }
 });
 

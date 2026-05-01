@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>People Connections Connector</title>
-    <link rel="stylesheet" href="/styles.css?v=20260501-9">
+    <link rel="stylesheet" href="/styles.css?v=20260501-10">
   </head>
   <body>
     <main class="app-shell">
@@ -20,13 +20,14 @@
           <div id="configMessage" class="config-message"></div>
           <div class="auth-actions">
             <a id="connectLinkedInButton" class="button primary" href="/auth/linkedin/start?authType=oidc">Connect LinkedIn</a>
-            <a id="connectLegacyButton" class="button secondary" href="/auth/linkedin/start?authType=legacy">Try Legacy</a>
-            <button id="localLoginButton" class="button secondary" type="button">Local Login</button>
             <button id="logoutButton" class="button secondary" type="button">Logout</button>
           </div>
         </section>
         <section class="panel">
-          <h2>Search</h2>
+          <div class="panel-header">
+            <h2>Search</h2>
+            <button id="resetSearchButton" class="button secondary compact" type="button">Reset</button>
+          </div>
           <div class="linkedin-search">
             <label>Search jobs
               <input id="jobSearchInput" type="search" value="AI Product Manager" placeholder="Title, skill, or company">
@@ -145,6 +146,6 @@
         </section>
       </section>
     </main>
-    <script src="/app.js?v=20260501-9" type="module"></script>
+    <script src="/app.js?v=20260501-10" type="module"></script>
   </body>
 </html>
