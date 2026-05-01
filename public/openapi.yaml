@@ -62,10 +62,6 @@ paths:
                 sort:
                   type: string
                   enum: [relevance, recent, network]
-                maxResults:
-                  type: integer
-                  minimum: 50
-                  maximum: 100
       responses:
         "200":
           description: Curated opportunities and job source status.

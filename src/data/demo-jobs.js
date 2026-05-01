@@ -48,7 +48,8 @@ function formatWorkplace(location, criteria, index) {
 
 export function generateDemoJobs(criteria) {
   const jobs = [];
-  const count = Math.max(criteria.maxResults * 3, 120);
+  const configuredCount = Number(process.env.DEMO_JOB_COUNT || 240);
+  const count = Number.isNaN(configuredCount) ? 240 : Math.max(120, configuredCount);
   for (let index = 0; index < count; index += 1) {
     const company = companies[index % companies.length];
     const title = criteria.targetTitles[index % criteria.targetTitles.length] || titlePool[index % titlePool.length];

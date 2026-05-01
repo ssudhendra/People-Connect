@@ -30,7 +30,6 @@ const workplaceSelect = document.querySelector("#workplaceSelect");
 const jobTypeSelect = document.querySelector("#jobTypeSelect");
 const companyFilterInput = document.querySelector("#companyFilterInput");
 const sortSelect = document.querySelector("#sortSelect");
-const maxResultsInput = document.querySelector("#maxResultsInput");
 
 let connectorHealth = null;
 let allOpportunities = [];
@@ -47,8 +46,7 @@ const defaultSearchState = {
   workplace: "any",
   jobType: "any",
   company: "",
-  sort: "relevance",
-  maxResults: "75"
+  sort: "relevance"
 };
 
 const searchOptionGroups = [
@@ -386,8 +384,7 @@ async function generateOpportunities() {
         workplace: workplaceSelect.value,
         jobType: jobTypeSelect.value,
         company: companyFilterInput.value.trim(),
-        sort: sortSelect.value,
-        maxResults: maxResultsInput.value
+        sort: sortSelect.value
       })
     });
     allOpportunities = payload.opportunities;
@@ -430,7 +427,6 @@ async function resetSearch() {
     jobTypeSelect.value = defaultSearchState.jobType;
     companyFilterInput.value = defaultSearchState.company;
     sortSelect.value = defaultSearchState.sort;
-    maxResultsInput.value = defaultSearchState.maxResults;
     resetResultFilters();
     searchOptionGroups.forEach(syncOptionGroup);
     await generateOpportunities();

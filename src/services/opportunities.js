@@ -11,7 +11,6 @@ const defaultCriteria = {
   jobType: "any",
   company: "",
   sort: "relevance",
-  maxResults: 75,
   remotePreference: "hybrid"
 };
 
@@ -32,12 +31,6 @@ export function getJobSourceStatus() {
   };
 }
 
-function clampResultCount(value) {
-  const parsed = Number(value || defaultCriteria.maxResults);
-  if (Number.isNaN(parsed)) return defaultCriteria.maxResults;
-  return Math.min(100, Math.max(50, parsed));
-}
-
 function normalizeCriteria(payload = {}) {
   return {
     targetTitles: payload.targetTitles?.length ? payload.targetTitles : defaultCriteria.targetTitles,
@@ -49,8 +42,7 @@ function normalizeCriteria(payload = {}) {
     jobType: payload.jobType || defaultCriteria.jobType,
     company: payload.company || defaultCriteria.company,
     sort: payload.sort || defaultCriteria.sort,
-    remotePreference: payload.remotePreference || payload.workplace || defaultCriteria.remotePreference,
-    maxResults: clampResultCount(payload.maxResults)
+    remotePreference: payload.remotePreference || payload.workplace || defaultCriteria.remotePreference
   };
 }
 
@@ -169,8 +161,7 @@ function buildProviderPayload(criteria, profile) {
       workplace: criteria.workplace,
       jobType: criteria.jobType,
       company: criteria.company,
-      sort: criteria.sort,
-      maxResults: criteria.maxResults
+      sort: criteria.sort
     },
     profile: {
       name: profile.name,
@@ -232,6 +223,5 @@ export async function createOpportunities(profile, payload = {}) {
       fitScore: scoreJob(job, profile, criteria)
     }))
     .filter((job) => matchesCriteria(job, criteria))
-    .sort((a, b) => sortJobs(a, b, criteria))
-    .slice(0, criteria.maxResults);
+    .sort((a, b) => sortJobs(a, b, criteria));
 }

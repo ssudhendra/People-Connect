@@ -234,9 +234,11 @@ select {
 
 .workspace {
   display: grid;
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
   gap: 18px;
   padding: 28px;
+  height: 100vh;
+  overflow: hidden;
   min-width: 0;
 }
 
@@ -291,6 +293,9 @@ select {
 
 .tab-view.active {
   display: block;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
 }
 
 .metrics {
@@ -322,6 +327,7 @@ select {
   gap: 12px;
   align-content: start;
   min-width: 0;
+  padding-bottom: 24px;
 }
 
 .connection-list,
@@ -489,6 +495,16 @@ select {
   .sidebar {
     border-right: 0;
     border-bottom: 1px solid var(--line);
+  }
+
+  .workspace {
+    height: auto;
+    overflow: visible;
+  }
+
+  .tab-view.active {
+    overflow: visible;
+    padding-right: 0;
   }
 
   .metrics,
