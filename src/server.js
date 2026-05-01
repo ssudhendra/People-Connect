@@ -1,15 +1,39 @@
 import http from "node:http";
 import crypto from "node:crypto";
+import { readFileSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildAuthorizationUrl, exchangeCodeForToken, fetchLinkedInProfile } from "./services/linkedin.js";
-import { getProfileForSession, getSession, requireSession } from "./services/session.js";
+import { getProfileForSession, getSession } from "./services/session.js";
 import { createOpportunities } from "./services/opportunities.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 const publicDir = path.join(rootDir, "public");
+
+function loadEnvFile(filePath) {
+  try {
+    const lines = readFileSync(filePath, "utf8").split(/\r?\n/);
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) continue;
+      const [rawKey, ...rawValue] = trimmed.split("=");
+      const key = rawKey.trim();
+      let value = rawValue.join("=").trim();
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      if (key && process.env[key] === undefined) {
+        process.env[key] = value;
+      }
+    }
+  } catch (err) {
+    if (err.code !== "ENOENT") throw err;
+  }
+}
+
+loadEnvFile(path.join(rootDir, ".env"));
 
 const PORT = Number(process.env.PORT || 8787);
 const HOST = process.env.HOST || "127.0.0.1";

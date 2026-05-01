@@ -82,7 +82,7 @@ function enrichJob(job, profile) {
 }
 
 async function fetchExternalJobs(criteria) {
-  if (!process.env.JOB_SOURCE_API_URL) return null;
+  if (process.env.CONNECTOR_MODE !== "live" || !process.env.JOB_SOURCE_API_URL) return null;
   const response = await fetch(process.env.JOB_SOURCE_API_URL, {
     method: "POST",
     headers: { "content-type": "application/json" },

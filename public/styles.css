@@ -129,6 +129,12 @@ input {
   color: var(--ink);
 }
 
+.button.disabled,
+.button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .button.wide {
   width: 100%;
 }
@@ -138,6 +144,14 @@ input {
   gap: 5px;
   color: var(--muted);
   font-size: 14px;
+}
+
+.config-message {
+  min-height: 18px;
+  color: var(--warn);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .profile-block strong {
