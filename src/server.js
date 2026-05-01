@@ -39,7 +39,7 @@ const PORT = Number(process.env.PORT || 8787);
 const HOST = process.env.HOST || "127.0.0.1";
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || `http://${HOST}:${PORT}`;
 const CONNECTOR_MODE = process.env.CONNECTOR_MODE || "demo";
-const LINKEDIN_REDIRECT_URI = `${PUBLIC_BASE_URL}/auth/linkedin/callback`;
+const LINKEDIN_REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI || `${PUBLIC_BASE_URL}/auth/linkedin/callback`;
 
 function isLinkedInConfigured() {
   if (!process.env.LINKEDIN_CLIENT_ID) return false;
