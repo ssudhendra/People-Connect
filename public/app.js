@@ -6,7 +6,7 @@ const setupPanel = document.querySelector("#setupPanel");
 const generateButton = document.querySelector("#generateButton");
 const logoutButton = document.querySelector("#logoutButton");
 const connectLinkedInButton = document.querySelector("#connectLinkedInButton");
-const connectOidcButton = document.querySelector("#connectOidcButton");
+const connectLegacyButton = document.querySelector("#connectLegacyButton");
 const localLoginButton = document.querySelector("#localLoginButton");
 const configMessage = document.querySelector("#configMessage");
 const countMetric = document.querySelector("#countMetric");
@@ -212,21 +212,21 @@ async function loadHealth() {
   renderSetup();
   if (connectorHealth.linkedInConfigured) {
     connectLinkedInButton.classList.remove("disabled");
-    connectOidcButton.classList.remove("disabled");
-    connectLinkedInButton.setAttribute("href", "/auth/linkedin/start?authType=legacy");
-    connectOidcButton.setAttribute("href", "/auth/linkedin/start?authType=oidc");
+    connectLegacyButton.classList.remove("disabled");
+    connectLinkedInButton.setAttribute("href", "/auth/linkedin/start?authType=oidc");
+    connectLegacyButton.setAttribute("href", "/auth/linkedin/start?authType=legacy");
     connectLinkedInButton.setAttribute("aria-disabled", "false");
-    connectOidcButton.setAttribute("aria-disabled", "false");
+    connectLegacyButton.setAttribute("aria-disabled", "false");
     configMessage.textContent = `LinkedIn callback: ${connectorHealth.linkedInRedirectUri}`;
     return;
   }
 
   connectLinkedInButton.classList.add("disabled");
-  connectOidcButton.classList.add("disabled");
+  connectLegacyButton.classList.add("disabled");
   connectLinkedInButton.setAttribute("href", "#");
-  connectOidcButton.setAttribute("href", "#");
+  connectLegacyButton.setAttribute("href", "#");
   connectLinkedInButton.setAttribute("aria-disabled", "true");
-  connectOidcButton.setAttribute("aria-disabled", "true");
+  connectLegacyButton.setAttribute("aria-disabled", "true");
   configMessage.textContent = "LinkedIn sign-in needs LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET in .env. Demo mode is active.";
 }
 
@@ -301,7 +301,7 @@ connectLinkedInButton.addEventListener("click", async (event) => {
     configMessage.textContent = "Add LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET to .env, then restart npm start.";
   }
 });
-connectOidcButton.addEventListener("click", async (event) => {
+connectLegacyButton.addEventListener("click", async (event) => {
   if (!connectorHealth?.linkedInConfigured) {
     event.preventDefault();
     statusBadge.textContent = "LinkedIn config needed";

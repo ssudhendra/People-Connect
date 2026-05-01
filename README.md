@@ -55,8 +55,8 @@ http://127.0.0.1:8787/auth/linkedin/callback
 LINKEDIN_CLIENT_ID=your-client-id
 LINKEDIN_CLIENT_SECRET=your-client-secret
 LINKEDIN_REDIRECT_URI=auto
-LINKEDIN_AUTH_TYPE=legacy
-LINKEDIN_SCOPES=r_liteprofile r_emailaddress
+LINKEDIN_AUTH_TYPE=oidc
+LINKEDIN_SCOPES=openid profile email
 LINKEDIN_OAUTH_FLOW=web
 CONNECTOR_MODE=live
 ```
@@ -67,11 +67,11 @@ CONNECTOR_MODE=live
 npm start
 ```
 
-Use `LINKEDIN_OAUTH_FLOW=web` for self-serve Sign In with LinkedIn using OpenID Connect. Do not use `local-pkce` unless LinkedIn has explicitly enabled Native PKCE protocol access for your app.
+Use `LINKEDIN_AUTH_TYPE=oidc` for self-serve **Sign In with LinkedIn using OpenID Connect**. Do not use `local-pkce` unless LinkedIn has explicitly enabled Native PKCE protocol access for your app.
 
 LinkedIn requires an exact redirect URI match. `LINKEDIN_REDIRECT_URI=auto` sends a callback matching the host you opened, so registering both local URLs prevents localhost versus 127.0.0.1 mismatches.
 
-If your LinkedIn app has **Sign In with LinkedIn using OpenID Connect**, set `LINKEDIN_AUTH_TYPE=oidc` and `LINKEDIN_SCOPES=openid profile email`. If your app has the older **Sign In with LinkedIn** product, keep `LINKEDIN_AUTH_TYPE=legacy` and `LINKEDIN_SCOPES=r_liteprofile r_emailaddress`.
+If your LinkedIn app has the older **Sign In with LinkedIn** product, set `LINKEDIN_AUTH_TYPE=legacy` and `LINKEDIN_SCOPES=r_liteprofile r_emailaddress`.
 
 ## Connector endpoints
 

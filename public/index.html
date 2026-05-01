@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>People Connections Connector</title>
-    <link rel="stylesheet" href="/styles.css?v=20260501-4">
+    <link rel="stylesheet" href="/styles.css?v=20260501-5">
   </head>
   <body>
     <main class="app-shell">
@@ -19,8 +19,8 @@
           <div id="profileBlock" class="profile-block"></div>
           <div id="configMessage" class="config-message"></div>
           <div class="auth-actions">
-            <a id="connectLinkedInButton" class="button primary" href="/auth/linkedin/start?authType=legacy">Connect LinkedIn</a>
-            <a id="connectOidcButton" class="button secondary" href="/auth/linkedin/start?authType=oidc">Try OIDC</a>
+            <a id="connectLinkedInButton" class="button primary" href="/auth/linkedin/start?authType=oidc">Connect LinkedIn</a>
+            <a id="connectLegacyButton" class="button secondary" href="/auth/linkedin/start?authType=legacy">Try Legacy</a>
             <a id="localLoginButton" class="button secondary" href="/auth/local/demo">Local Login</a>
             <button id="logoutButton" class="button secondary" type="button">Reset</button>
           </div>
@@ -104,6 +104,6 @@ Developer Tools</textarea>
         </section>
       </section>
     </main>
-    <script src="/app.js?v=20260501-4" type="module"></script>
+    <script src="/app.js?v=20260501-5" type="module"></script>
   </body>
 </html>
