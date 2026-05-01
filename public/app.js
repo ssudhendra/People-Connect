@@ -207,13 +207,15 @@ async function loadHealth() {
   renderSetup();
   if (connectorHealth.linkedInConfigured) {
     connectLinkedInButton.classList.remove("disabled");
-    connectLinkedInButton.disabled = false;
+    connectLinkedInButton.setAttribute("href", "/auth/linkedin/start");
+    connectLinkedInButton.setAttribute("aria-disabled", "false");
     configMessage.textContent = `LinkedIn callback: ${connectorHealth.linkedInRedirectUri}`;
     return;
   }
 
   connectLinkedInButton.classList.add("disabled");
-  connectLinkedInButton.disabled = true;
+  connectLinkedInButton.setAttribute("href", "#");
+  connectLinkedInButton.setAttribute("aria-disabled", "true");
   configMessage.textContent = "LinkedIn sign-in needs LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET in .env. Demo mode is active.";
 }
 
@@ -281,14 +283,12 @@ logoutButton.addEventListener("click", async () => {
   }
 });
 
-connectLinkedInButton.addEventListener("click", async () => {
+connectLinkedInButton.addEventListener("click", async (event) => {
   if (!connectorHealth?.linkedInConfigured) {
+    event.preventDefault();
     statusBadge.textContent = "LinkedIn config needed";
     configMessage.textContent = "Add LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET to .env, then restart npm start.";
-    return;
   }
-  await loadHealth();
-  window.location.assign("/auth/linkedin/start");
 });
 
 document.querySelectorAll(".tab").forEach((tab) => {
