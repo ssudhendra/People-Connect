@@ -154,6 +154,24 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+function linkedInProfileUrl(contact) {
+  const directUrl = contact.profileUrl || contact.linkedinUrl || contact.linkedinProfileUrl;
+  if (directUrl && /^https:\/\/([a-z]{2,3}\.)?linkedin\.com\//i.test(directUrl)) {
+    return directUrl;
+  }
+  const query = [contact.name, contact.company, contact.title].filter(Boolean).join(" ");
+  return `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(query)}`;
+}
+
+function contactNameLink(contact) {
+  const url = linkedInProfileUrl(contact);
+  return `
+    <a class="profile-link" href="${escapeHtml(url)}" target="_blank" rel="noreferrer" aria-label="Open ${escapeHtml(contact.name)} on LinkedIn">
+      ${escapeHtml(contact.name)}
+    </a>
+  `;
+}
+
 async function api(path, options = {}) {
   const response = await fetch(path, {
     headers: { "content-type": "application/json" },
@@ -305,7 +323,7 @@ function renderOpportunityCards(opportunities) {
       <div class="contacts">
         ${(job.keyContacts || []).slice(0, 3).map((contact) => `
           <div class="contact">
-            <strong>${escapeHtml(contact.name)} <span class="degree">${escapeHtml(contact.degree)}</span></strong>
+            <strong>${contactNameLink(contact)} <span class="degree">${escapeHtml(contact.degree)}</span></strong>
             <span class="contact-meta">${escapeHtml(contact.title)} · ${escapeHtml(contact.type)}</span>
             <span class="path">${escapeHtml((contact.connectionPath || []).join(" -> "))}</span>
           </div>
@@ -335,7 +353,7 @@ function renderConnections(opportunities) {
 
   connectionsList.innerHTML = values.map((contact) => `
     <article class="connection-card">
-      <strong>${escapeHtml(contact.name)} <span class="degree">${escapeHtml(contact.degree)}</span></strong>
+      <strong>${contactNameLink(contact)} <span class="degree">${escapeHtml(contact.degree)}</span></strong>
       <span class="contact-meta">${escapeHtml(contact.title)} · ${escapeHtml(contact.company)} · ${escapeHtml(contact.type)}</span>
       <span class="path">${escapeHtml((contact.connectionPath || []).join(" -> "))}</span>
       <span class="job-meta">${escapeHtml(contact.roles.slice(0, 3).join("; "))}</span>

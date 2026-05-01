@@ -523,6 +523,17 @@ select {
   font-size: 14px;
 }
 
+.profile-link {
+  color: var(--brand);
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.profile-link:hover {
+  color: var(--brand-dark);
+  text-decoration: underline;
+}
+
 .degree {
   color: var(--warn);
   font-weight: 900;
