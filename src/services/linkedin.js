@@ -4,6 +4,8 @@ const AUTH_URL = "https://www.linkedin.com/oauth/v2/authorization";
 const NATIVE_PKCE_AUTH_URL = "https://www.linkedin.com/oauth/native-pkce/authorization";
 const TOKEN_URL = "https://www.linkedin.com/oauth/v2/accessToken";
 const USERINFO_URL = "https://api.linkedin.com/v2/userinfo";
+const PROFILE_URL = "https://api.linkedin.com/v2/me";
+const EMAIL_URL = "https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))";
 
 function requiredEnv(name) {
   const value = process.env[name];
@@ -43,13 +45,28 @@ export function isPkceFlow() {
   return getOAuthFlow() === "local-pkce";
 }
 
+export function getLinkedInScopes() {
+  const configured = process.env.LINKEDIN_SCOPES;
+  if (!isPkceFlow()) {
+    return configured || "openid profile email";
+  }
+
+  if (!configured) {
+    return "r_liteprofile r_emailaddress";
+  }
+
+  const scopes = configured.split(/\s+/).filter(Boolean);
+  const hasOpenIdScope = scopes.some((scope) => ["openid", "profile", "email"].includes(scope));
+  return hasOpenIdScope ? "r_liteprofile r_emailaddress" : scopes.join(" ");
+}
+
 export function buildAuthorizationUrl({ state, codeVerifier, redirectUri }) {
   const params = new URLSearchParams({
     response_type: "code",
     client_id: requiredEnv("LINKEDIN_CLIENT_ID"),
     redirect_uri: redirectUri,
     state,
-    scope: process.env.LINKEDIN_SCOPES || "openid profile email"
+    scope: getLinkedInScopes()
   });
 
   if (isPkceFlow()) {
@@ -90,7 +107,58 @@ export async function exchangeCodeForToken({ code, codeVerifier, usePkce, redire
   return payload;
 }
 
+function localizedName(value) {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (value.localized) {
+    return Object.values(value.localized)[0] || "";
+  }
+  return "";
+}
+
+function profilePictureUrl(profile) {
+  const elements = profile.profilePicture?.["displayImage~"]?.elements || [];
+  const largest = elements.at(-1);
+  return largest?.identifiers?.[0]?.identifier || "";
+}
+
+async function fetchLegacyProfile(tokens) {
+  const profileResponse = await fetch(PROFILE_URL, {
+    headers: { authorization: `Bearer ${tokens.access_token}` }
+  });
+  const profile = await profileResponse.json().catch(() => ({}));
+  if (!profileResponse.ok) {
+    throw new Error(profile.message || profile.serviceErrorCode || "LinkedIn profile lookup failed");
+  }
+
+  let email = "";
+  if (getLinkedInScopes().split(/\s+/).includes("r_emailaddress")) {
+    const emailResponse = await fetch(EMAIL_URL, {
+      headers: { authorization: `Bearer ${tokens.access_token}` }
+    });
+    const emailPayload = await emailResponse.json().catch(() => ({}));
+    email = emailResponse.ok ? emailPayload.elements?.[0]?.["handle~"]?.emailAddress || "" : "";
+  }
+
+  const firstName = profile.localizedFirstName || localizedName(profile.firstName);
+  const lastName = profile.localizedLastName || localizedName(profile.lastName);
+  return {
+    provider: "linkedin",
+    id: profile.id,
+    name: [firstName, lastName].filter(Boolean).join(" ") || "LinkedIn member",
+    email,
+    headline: profile.localizedHeadline || profile.headline || "LinkedIn member",
+    picture: profilePictureUrl(profile),
+    location: "",
+    skills: []
+  };
+}
+
 export async function fetchLinkedInProfile(tokens) {
+  if (isPkceFlow()) {
+    return fetchLegacyProfile(tokens);
+  }
+
   const response = await fetch(USERINFO_URL, {
     headers: { authorization: `Bearer ${tokens.access_token}` }
   });

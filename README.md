@@ -51,6 +51,7 @@ http://127.0.0.1:8787/auth/linkedin/callback
 ```bash
 LINKEDIN_CLIENT_ID=your-client-id
 LINKEDIN_CLIENT_SECRET=your-client-secret
+LINKEDIN_SCOPES=r_liteprofile r_emailaddress
 LINKEDIN_OAUTH_FLOW=local-pkce
 CONNECTOR_MODE=live
 ```
@@ -61,7 +62,7 @@ CONNECTOR_MODE=live
 npm start
 ```
 
-For direct local usage, keep `LINKEDIN_OAUTH_FLOW=local-pkce`. Use `LINKEDIN_OAUTH_FLOW=web` only after deploying behind HTTPS and registering that HTTPS callback URL in the LinkedIn Developer Portal.
+For direct local usage, keep `LINKEDIN_OAUTH_FLOW=local-pkce` and use `r_liteprofile r_emailaddress`. OIDC scopes (`openid profile email`) are only valid for the web OIDC flow, not LinkedIn's native PKCE flow. Use `LINKEDIN_OAUTH_FLOW=web` only after deploying behind HTTPS and registering that HTTPS callback URL in the LinkedIn Developer Portal.
 
 ## Connector endpoints
 

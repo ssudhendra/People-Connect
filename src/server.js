@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildAuthorizationUrl, exchangeCodeForToken, fetchLinkedInProfile, getOAuthFlow, isPkceFlow } from "./services/linkedin.js";
+import { buildAuthorizationUrl, exchangeCodeForToken, fetchLinkedInProfile, getLinkedInScopes, getOAuthFlow, isPkceFlow } from "./services/linkedin.js";
 import { getProfileForSession, getSession } from "./services/session.js";
 import { createOpportunities } from "./services/opportunities.js";
 
@@ -116,6 +116,7 @@ async function handleApi(req, res) {
       mode: CONNECTOR_MODE,
       linkedInConfigured: isLinkedInConfigured(),
       linkedInOAuthFlow: getOAuthFlow(),
+      linkedInScopes: getLinkedInScopes(),
       linkedInRedirectUri: LINKEDIN_REDIRECT_URI,
       jobSourceConfigured: Boolean(process.env.JOB_SOURCE_API_URL),
       baseUrl: PUBLIC_BASE_URL
