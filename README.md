@@ -36,6 +36,8 @@ Open `http://localhost:8787`.
 
 The app runs in `demo` mode by default. You can test the whole job and connection-path flow without LinkedIn credentials.
 
+Use **Local Login** in the app when you want to validate the connector without LinkedIn OAuth. Use **Connect LinkedIn** for legacy LinkedIn sign-in apps, or **Try OIDC** if your app has the newer OpenID Connect product.
+
 ## Enable LinkedIn sign-in
 
 1. Create a LinkedIn Developer app.

@@ -6,6 +6,8 @@ const setupPanel = document.querySelector("#setupPanel");
 const generateButton = document.querySelector("#generateButton");
 const logoutButton = document.querySelector("#logoutButton");
 const connectLinkedInButton = document.querySelector("#connectLinkedInButton");
+const connectOidcButton = document.querySelector("#connectOidcButton");
+const localLoginButton = document.querySelector("#localLoginButton");
 const configMessage = document.querySelector("#configMessage");
 const countMetric = document.querySelector("#countMetric");
 const firstMetric = document.querySelector("#firstMetric");
@@ -189,12 +191,14 @@ function renderSetup() {
     return;
   }
   const localRedirects = connectorHealth.linkedInLocalRedirectUris || [];
+  const authOptions = connectorHealth.linkedInAuthOptions || [];
   setupPanel.innerHTML = [
     setupItem("Active LinkedIn redirect URI", connectorHealth.linkedInRedirectUri),
     setupItem("LinkedIn auth type", connectorHealth.linkedInAuthType),
     setupItem("OAuth flow", connectorHealth.linkedInOAuthFlow),
     setupItem("OAuth scopes", connectorHealth.linkedInScopes),
-    ...localRedirects.map((uri, index) => setupItem(`LinkedIn portal callback ${index + 1}`, uri))
+    ...localRedirects.map((uri, index) => setupItem(`LinkedIn portal callback ${index + 1}`, uri)),
+    ...authOptions.map((option) => setupItem(`LinkedIn ${option.authType} start URL`, option.startUrl))
   ].join("");
 }
 
@@ -208,15 +212,21 @@ async function loadHealth() {
   renderSetup();
   if (connectorHealth.linkedInConfigured) {
     connectLinkedInButton.classList.remove("disabled");
-    connectLinkedInButton.setAttribute("href", "/auth/linkedin/start");
+    connectOidcButton.classList.remove("disabled");
+    connectLinkedInButton.setAttribute("href", "/auth/linkedin/start?authType=legacy");
+    connectOidcButton.setAttribute("href", "/auth/linkedin/start?authType=oidc");
     connectLinkedInButton.setAttribute("aria-disabled", "false");
+    connectOidcButton.setAttribute("aria-disabled", "false");
     configMessage.textContent = `LinkedIn callback: ${connectorHealth.linkedInRedirectUri}`;
     return;
   }
 
   connectLinkedInButton.classList.add("disabled");
+  connectOidcButton.classList.add("disabled");
   connectLinkedInButton.setAttribute("href", "#");
+  connectOidcButton.setAttribute("href", "#");
   connectLinkedInButton.setAttribute("aria-disabled", "true");
+  connectOidcButton.setAttribute("aria-disabled", "true");
   configMessage.textContent = "LinkedIn sign-in needs LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET in .env. Demo mode is active.";
 }
 
@@ -290,6 +300,16 @@ connectLinkedInButton.addEventListener("click", async (event) => {
     statusBadge.textContent = "LinkedIn config needed";
     configMessage.textContent = "Add LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET to .env, then restart npm start.";
   }
+});
+connectOidcButton.addEventListener("click", async (event) => {
+  if (!connectorHealth?.linkedInConfigured) {
+    event.preventDefault();
+    statusBadge.textContent = "LinkedIn config needed";
+    configMessage.textContent = "Add LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET to .env, then restart npm start.";
+  }
+});
+localLoginButton.addEventListener("click", () => {
+  statusBadge.textContent = "Signing in locally";
 });
 
 document.querySelectorAll(".tab").forEach((tab) => {

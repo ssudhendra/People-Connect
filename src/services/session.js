@@ -50,3 +50,13 @@ export function requireSession(req, res) {
 export function getProfileForSession(session) {
   return session.profile || demoProfile;
 }
+
+export function signInWithDemoProfile(session) {
+  session.profile = {
+    ...demoProfile,
+    provider: "local"
+  };
+  session.tokens = null;
+  session.oauth = null;
+  return session.profile;
+}

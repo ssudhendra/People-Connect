@@ -4,8 +4,8 @@ import { readFileSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildAuthorizationUrl, exchangeCodeForToken, fetchLinkedInProfile, getLinkedInAuthType, getLinkedInScopes, getOAuthFlow, isPkceFlow } from "./services/linkedin.js";
-import { getProfileForSession, getSession } from "./services/session.js";
+import { buildAuthorizationUrl, exchangeCodeForToken, fetchLinkedInProfile, getLinkedInAuthType, getLinkedInScopes, getOAuthFlow, isPkceFlow, normalizeLinkedInAuthType } from "./services/linkedin.js";
+import { getProfileForSession, getSession, signInWithDemoProfile } from "./services/session.js";
 import { createOpportunities } from "./services/opportunities.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -58,6 +58,22 @@ function isLinkedInConfigured() {
   if (!process.env.LINKEDIN_CLIENT_ID) return false;
   if (isPkceFlow()) return true;
   return Boolean(process.env.LINKEDIN_CLIENT_SECRET);
+}
+
+function linkedInAuthOptions(req) {
+  return ["legacy", "oidc"].map((authType) => ({
+    authType,
+    scopes: getLinkedInScopes(authType),
+    startUrl: `/auth/linkedin/start?authType=${authType}`,
+    authorizationUrl: isLinkedInConfigured()
+      ? buildAuthorizationUrl({
+        state: "preview",
+        codeVerifier: "preview-code-verifier-not-used-for-web-flow",
+        redirectUri: linkedInRedirectUriForRequest(req),
+        authType
+      })
+      : ""
+  }));
 }
 
 const mimeTypes = new Map([
@@ -138,6 +154,7 @@ async function handleApi(req, res) {
         `http://localhost:${PORT}/auth/linkedin/callback`,
         `http://127.0.0.1:${PORT}/auth/linkedin/callback`
       ],
+      linkedInAuthOptions: linkedInAuthOptions(req),
       jobSourceConfigured: Boolean(process.env.JOB_SOURCE_API_URL),
       baseUrl: PUBLIC_BASE_URL
     });
@@ -147,7 +164,7 @@ async function handleApi(req, res) {
   if (req.method === "GET" && url.pathname === "/api/profile") {
     sendJson(res, 200, {
       profile: getProfileForSession(session),
-      authenticated: Boolean(session.profile?.provider === "linkedin")
+      authenticated: Boolean(session.profile)
     });
     return;
   }
@@ -167,12 +184,24 @@ async function handleApi(req, res) {
     return;
   }
 
+  if (req.method === "POST" && url.pathname === "/api/local-login") {
+    const profile = signInWithDemoProfile(session);
+    sendJson(res, 200, { ok: true, profile });
+    return;
+  }
+
   sendJson(res, 404, { error: "Unknown API route" });
 }
 
 async function handleAuth(req, res) {
   const url = new URL(req.url, PUBLIC_BASE_URL);
   const session = getSession(req, res);
+
+  if (req.method === "GET" && url.pathname === "/auth/local/demo") {
+    signInWithDemoProfile(session);
+    redirect(res, "/?auth=local");
+    return;
+  }
 
   if (req.method === "GET" && url.pathname === "/auth/linkedin/start") {
     if (!isLinkedInConfigured()) {
@@ -182,12 +211,14 @@ async function handleAuth(req, res) {
 
     const state = crypto.randomBytes(24).toString("base64url");
     const usePkce = isPkceFlow();
+    const authType = normalizeLinkedInAuthType(url.searchParams.get("authType") || getLinkedInAuthType());
     const codeVerifier = usePkce ? crypto.randomBytes(48).toString("base64url") : null;
     const redirectUri = linkedInRedirectUriForRequest(req);
     session.oauth = {
       state,
       codeVerifier,
       usePkce,
+      authType,
       redirectUri,
       createdAt: Date.now()
     };
@@ -195,7 +226,8 @@ async function handleAuth(req, res) {
     redirect(res, buildAuthorizationUrl({
       state,
       codeVerifier,
-      redirectUri
+      redirectUri,
+      authType
     }));
     return;
   }
@@ -227,7 +259,7 @@ async function handleAuth(req, res) {
         usePkce: session.oauth.usePkce,
         redirectUri: session.oauth.redirectUri
       });
-      const profile = await fetchLinkedInProfile(tokens);
+      const profile = await fetchLinkedInProfile(tokens, session.oauth.authType);
       session.tokens = tokens;
       session.profile = profile;
       session.oauth = null;

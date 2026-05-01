@@ -113,6 +113,12 @@ select {
   gap: 10px;
 }
 
+.auth-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
 .button {
   min-height: 40px;
   border: 1px solid transparent;

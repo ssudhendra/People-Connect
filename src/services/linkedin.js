@@ -58,17 +58,21 @@ export function getLinkedInAuthType() {
   return "legacy";
 }
 
-export function getLinkedInScopes() {
+export function normalizeLinkedInAuthType(value = getLinkedInAuthType()) {
+  return value === "oidc" ? "oidc" : "legacy";
+}
+
+export function getLinkedInScopes(authType = getLinkedInAuthType()) {
+  const normalizedAuthType = normalizeLinkedInAuthType(authType);
   const configured = process.env.LINKEDIN_SCOPES;
   if (!isPkceFlow()) {
-    const authType = getLinkedInAuthType();
     if (!configured) {
-      return authType === "oidc" ? "openid profile email" : "r_liteprofile r_emailaddress";
+      return normalizedAuthType === "oidc" ? "openid profile email" : "r_liteprofile r_emailaddress";
     }
     const scopes = configured.split(/\s+/).filter(Boolean);
     const hasLegacyScope = scopes.some((scope) => ["r_liteprofile", "r_emailaddress"].includes(scope));
     const hasOpenIdScope = scopes.some((scope) => ["openid", "profile", "email"].includes(scope));
-    if (authType === "oidc") {
+    if (normalizedAuthType === "oidc") {
       return hasLegacyScope ? "openid profile email" : scopes.join(" ");
     }
     return hasOpenIdScope ? "r_liteprofile r_emailaddress" : scopes.join(" ");
@@ -83,13 +87,13 @@ export function getLinkedInScopes() {
   return hasOpenIdScope ? "r_liteprofile r_emailaddress" : scopes.join(" ");
 }
 
-export function buildAuthorizationUrl({ state, codeVerifier, redirectUri }) {
+export function buildAuthorizationUrl({ state, codeVerifier, redirectUri, authType }) {
   const params = new URLSearchParams({
     response_type: "code",
     client_id: requiredEnv("LINKEDIN_CLIENT_ID"),
     redirect_uri: redirectUri,
     state,
-    scope: getLinkedInScopes()
+    scope: getLinkedInScopes(authType)
   });
 
   if (isPkceFlow()) {
@@ -177,8 +181,8 @@ async function fetchLegacyProfile(tokens) {
   };
 }
 
-export async function fetchLinkedInProfile(tokens) {
-  if (isPkceFlow() || getLinkedInAuthType() === "legacy") {
+export async function fetchLinkedInProfile(tokens, authType = getLinkedInAuthType()) {
+  if (isPkceFlow() || normalizeLinkedInAuthType(authType) === "legacy") {
     return fetchLegacyProfile(tokens);
   }
 
