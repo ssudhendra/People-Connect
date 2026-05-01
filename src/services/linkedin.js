@@ -93,7 +93,8 @@ export function buildAuthorizationUrl({ state, codeVerifier, redirectUri, authTy
     client_id: requiredEnv("LINKEDIN_CLIENT_ID"),
     redirect_uri: redirectUri,
     state,
-    scope: getLinkedInScopes(authType)
+    scope: getLinkedInScopes(authType),
+    enable_extended_login: "true"
   });
 
   if (isPkceFlow()) {
