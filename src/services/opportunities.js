@@ -2,8 +2,8 @@ import { demoConnections, demoContacts } from "../data/demo-network.js";
 import { generateDemoJobs } from "../data/demo-jobs.js";
 
 const defaultCriteria = {
-  targetTitles: ["Product Manager", "AI Product Manager", "Platform Product Manager"],
-  locations: ["Chicago", "Remote", "New York", "San Francisco"],
+  targetTitles: [],
+  locations: [],
   industries: ["AI", "SaaS", "Developer Tools", "Marketplaces"],
   datePosted: "any",
   experienceLevel: "any",

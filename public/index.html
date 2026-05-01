@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>People Connections Connector</title>
-    <link rel="stylesheet" href="/styles.css?v=20260501-10">
+    <link rel="stylesheet" href="/styles.css?v=20260501-11">
   </head>
   <body>
     <main class="app-shell">
@@ -30,14 +30,17 @@
           </div>
           <div class="linkedin-search">
             <label>Search jobs
-              <input id="jobSearchInput" type="search" value="AI Product Manager" placeholder="Title, skill, or company">
+              <input id="jobSearchInput" type="search" placeholder="Title, skill, or company">
             </label>
             <label>Location
-              <input id="jobLocationInput" type="search" value="Remote" placeholder="City, state, or remote">
+              <input id="jobLocationInput" type="search" list="locationSuggestions" placeholder="City, state, country, or remote">
             </label>
+            <datalist id="locationSuggestions"></datalist>
           </div>
-          <div id="titleOptions" class="option-chips" aria-label="Job search suggestions"></div>
-          <div id="locationOptions" class="option-chips" aria-label="Location suggestions"></div>
+          <div class="location-actions">
+            <button id="profileLocationButton" class="small-button" type="button">Profile location</button>
+            <button id="geoLocationButton" class="small-button" type="button">Current location</button>
+          </div>
           <div class="linkedin-filters">
             <label>Date posted
               <select id="datePostedSelect">
@@ -146,6 +149,6 @@
         </section>
       </section>
     </main>
-    <script src="/app.js?v=20260501-10" type="module"></script>
+    <script src="/app.js?v=20260501-11" type="module"></script>
   </body>
 </html>

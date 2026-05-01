@@ -18,11 +18,12 @@ const minFitValue = document.querySelector("#minFitValue");
 const degreeFilter = document.querySelector("#degreeFilter");
 const applyFiltersButton = document.querySelector("#applyFiltersButton");
 const clearFiltersButton = document.querySelector("#clearFiltersButton");
-const titleOptions = document.querySelector("#titleOptions");
-const locationOptions = document.querySelector("#locationOptions");
 const industryOptions = document.querySelector("#industryOptions");
 const jobSearchInput = document.querySelector("#jobSearchInput");
 const jobLocationInput = document.querySelector("#jobLocationInput");
+const locationSuggestions = document.querySelector("#locationSuggestions");
+const profileLocationButton = document.querySelector("#profileLocationButton");
+const geoLocationButton = document.querySelector("#geoLocationButton");
 const datePostedSelect = document.querySelector("#datePostedSelect");
 const experienceSelect = document.querySelector("#experienceSelect");
 const workplaceSelect = document.querySelector("#workplaceSelect");
@@ -35,10 +36,11 @@ let connectorHealth = null;
 let allOpportunities = [];
 let visibleOpportunities = [];
 let currentJobSourceStatus = null;
+let currentProfile = null;
 
 const defaultSearchState = {
-  title: "AI Product Manager",
-  location: "Remote",
+  title: "",
+  location: "",
   industries: ["AI", "SaaS", "Developer Tools"],
   datePosted: "any",
   experienceLevel: "any",
@@ -51,27 +53,6 @@ const defaultSearchState = {
 
 const searchOptionGroups = [
   {
-    container: titleOptions,
-    input: jobSearchInput,
-    mode: "single",
-    values: [
-      "AI Product Manager",
-      "Platform Product Manager",
-      "Senior Product Manager",
-      "Product Lead, Recruiting Intelligence",
-      "Group Product Manager, Developer Experience",
-      "Principal Product Manager, Data Products",
-      "Recruiter",
-      "Hiring Manager"
-    ]
-  },
-  {
-    container: locationOptions,
-    input: jobLocationInput,
-    mode: "single",
-    values: ["Remote", "Chicago", "New York", "San Francisco", "Seattle", "Boston"]
-  },
-  {
     container: industryOptions,
     input: null,
     mode: "multi",
@@ -79,6 +60,45 @@ const searchOptionGroups = [
     values: ["AI", "SaaS", "Developer Tools", "Marketplaces", "Fintech", "Enterprise Software"]
   }
 ];
+
+const defaultLocationSuggestions = [
+  "Remote",
+  "United States",
+  "New York, NY",
+  "San Francisco Bay Area",
+  "Los Angeles, CA",
+  "Chicago, IL",
+  "Seattle, WA",
+  "Austin, TX",
+  "Boston, MA",
+  "Washington, DC",
+  "Dallas-Fort Worth Metroplex",
+  "Atlanta, GA",
+  "Denver, CO",
+  "Miami, FL",
+  "Phoenix, AZ",
+  "Philadelphia, PA",
+  "Minneapolis, MN",
+  "Portland, OR",
+  "San Diego, CA",
+  "Toronto, ON",
+  "Vancouver, BC",
+  "London, England",
+  "Dublin, Ireland",
+  "Amsterdam, Netherlands",
+  "Berlin, Germany",
+  "Paris, France",
+  "Bengaluru, Karnataka",
+  "Hyderabad, Telangana",
+  "Mumbai, Maharashtra",
+  "Singapore",
+  "Sydney, NSW"
+];
+
+function renderLocationSuggestions(profileLocation = "") {
+  const values = [...new Set([profileLocation, ...defaultLocationSuggestions].filter(Boolean))];
+  locationSuggestions.innerHTML = values.map((value) => `<option value="${escapeHtml(value)}"></option>`).join("");
+}
 
 function currentGroupValues(group) {
   if (group.mode === "multi") {
@@ -327,6 +347,8 @@ function renderSetup() {
 
 async function loadProfile() {
   const payload = await api("/api/profile");
+  currentProfile = payload.profile;
+  renderLocationSuggestions(currentProfile.location);
   renderProfile(payload.profile, payload.authenticated);
 }
 
@@ -352,12 +374,12 @@ async function generateOpportunities() {
   generateButton.disabled = true;
   try {
     searchOptionGroups.forEach(syncOptionGroup);
-    const selectedIndustries = currentGroupValues(searchOptionGroups[2]);
+    const selectedIndustries = currentGroupValues(searchOptionGroups[0]);
     const payload = await api("/api/opportunities", {
       method: "POST",
       body: JSON.stringify({
-        targetTitles: currentGroupValues(searchOptionGroups[0]),
-        locations: currentGroupValues(searchOptionGroups[1]),
+        targetTitles: jobSearchInput.value.trim() ? [jobSearchInput.value.trim()] : [],
+        locations: jobLocationInput.value.trim() ? [jobLocationInput.value.trim()] : [],
         industries: selectedIndustries.length ? selectedIndustries : ["AI", "SaaS", "Developer Tools"],
         datePosted: datePostedSelect.value,
         experienceLevel: experienceSelect.value,
@@ -401,7 +423,7 @@ async function resetSearch() {
   try {
     jobSearchInput.value = defaultSearchState.title;
     jobLocationInput.value = defaultSearchState.location;
-    searchOptionGroups[2].selected = new Set(defaultSearchState.industries);
+    searchOptionGroups[0].selected = new Set(defaultSearchState.industries);
     datePostedSelect.value = defaultSearchState.datePosted;
     experienceSelect.value = defaultSearchState.experienceLevel;
     workplaceSelect.value = defaultSearchState.workplace;
@@ -425,6 +447,36 @@ applyFiltersButton.addEventListener("click", applyFilters);
 clearFiltersButton.addEventListener("click", () => {
   resetResultFilters();
   applyFilters();
+});
+profileLocationButton.addEventListener("click", () => {
+  if (!currentProfile?.location) {
+    statusBadge.textContent = "Profile location unavailable";
+    return;
+  }
+  jobLocationInput.value = currentProfile.location;
+  statusBadge.textContent = "Profile location selected";
+});
+geoLocationButton.addEventListener("click", () => {
+  if (!navigator.geolocation) {
+    statusBadge.textContent = "Current location unavailable";
+    return;
+  }
+  statusBadge.textContent = "Getting current location";
+  geoLocationButton.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const latitude = position.coords.latitude.toFixed(4);
+      const longitude = position.coords.longitude.toFixed(4);
+      jobLocationInput.value = `${latitude}, ${longitude}`;
+      statusBadge.textContent = "Current location selected";
+      geoLocationButton.disabled = false;
+    },
+    () => {
+      statusBadge.textContent = "Current location blocked";
+      geoLocationButton.disabled = false;
+    },
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+  );
 });
 minFitFilter.addEventListener("input", () => {
   minFitValue.textContent = `${minFitFilter.value}%`;
